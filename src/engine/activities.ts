@@ -1,6 +1,7 @@
 import type { ActivityIdea, Profile } from '../types'
 import { ACTIVITIES } from '../data/activities'
 import { summarizeAchievements, wantedKinds } from './achievements'
+import { L } from '../i18n/lang'
 
 /** Идея активности вместе с объяснением, почему она предлагается именно сейчас. */
 export interface ActivitySuggestion {
@@ -26,11 +27,11 @@ export function suggestActivities(profile: Profile, limit = 6): ActivitySuggesti
     const isWanted = wanted.includes(idea.kind)
 
     let weight = 0
-    let hint = 'Усиливает заявку в целом'
+    let hint = L('Усиливает заявку в целом', 'Өтінімді жалпы күшейтеді')
 
     if (fieldHit && idea.fields.length > 0) {
       weight += 30
-      hint = 'Подходит твоему направлению'
+      hint = L('Подходит твоему направлению', 'Бағытыңа сай келеді')
     } else if (idea.fields.length === 0) {
       weight += 12
     } else {
@@ -39,12 +40,12 @@ export function suggestActivities(profile: Profile, limit = 6): ActivitySuggesti
 
     if (isWanted && already === 0) {
       weight += 34
-      hint = 'По твоему направлению этого в анкете пока нет'
+      hint = L('По твоему направлению этого в анкете пока нет', 'Бағытың бойынша бұл сауалнамада әзірге жоқ')
     } else if (already === 0) {
       weight += 10
     } else if (already >= 2) {
       weight -= 18
-      hint = 'У тебя это уже есть — добавит немного'
+      hint = L('У тебя это уже есть — добавит немного', 'Бұл сенде бар — көп қоспайды')
     }
 
     // Чем меньше времени до подачи, тем важнее быстрые вещи: эссе, CV, письма.

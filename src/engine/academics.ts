@@ -1,4 +1,5 @@
 import type { Profile } from '../types'
+import { L } from '../i18n/lang'
 
 /**
  * Приведение успеваемости к единой 5-балльной шкале.
@@ -25,10 +26,10 @@ export function effectiveGpa(profile: Profile): number {
 /** Как называется шкала, в которой пользователь указал успеваемость. */
 export function gpaSourceLabel(profile: Profile): string | null {
   if (profile.schoolSystem === 'nis' && profile.exams.nis !== undefined) {
-    return `итоговый балл НИШ ${profile.exams.nis} из 100`
+    return L(`итоговый балл НИШ ${profile.exams.nis} из 100`, `НИШ қорытынды балы 100-ден ${profile.exams.nis}`)
   }
   if (profile.schoolSystem === 'ib' && profile.exams.ib !== undefined) {
-    return `диплом IB ${profile.exams.ib} из 45`
+    return L(`диплом IB ${profile.exams.ib} из 45`, `IB дипломы 45-тен ${profile.exams.ib}`)
   }
   return null
 }

@@ -2,6 +2,8 @@ import type { Profile } from '../types'
 import { recommend } from './match'
 import { BUDGET_LABEL, COUNTRY_LABEL, FIELD_LABEL } from '../data/taxonomy'
 import { listOf, plural, softLower } from '../lib/text'
+import { L } from '../i18n/lang'
+import { PROGRAMS } from '../data/programs'
 
 export interface Relaxation {
   /** Что предлагаем ослабить, человеческим языком. */
@@ -33,7 +35,7 @@ export function explainEmpty(profile: Profile): EmptyExplanation {
 
   if (!profile.relocation) {
     candidates.push({
-      label: 'Разрешить переезд в другую страну',
+      label: L('Разрешить переезд в другую страну', 'Басқа елге көшуге рұқсат беру'),
       gain: count({ ...profile, relocation: true }),
       patch: { relocation: true },
     })
@@ -43,7 +45,10 @@ export function explainEmpty(profile: Profile): EmptyExplanation {
     const wider: Profile['budget'] =
       profile.budget === 'grant-only' ? 'upto6k' : profile.budget === 'upto2k' ? 'upto6k' : 'upto15k'
     candidates.push({
-      label: `Поднять бюджет до «${softLower(BUDGET_LABEL[wider])}»`,
+      label: L(
+        `Поднять бюджет до «${softLower(BUDGET_LABEL[wider])}»`,
+        `Бюджетті «${softLower(BUDGET_LABEL[wider])}» деңгейіне дейін көтеру`,
+      ),
       gain: count({ ...profile, budget: wider }),
       patch: { budget: wider },
     })
@@ -51,7 +56,7 @@ export function explainEmpty(profile: Profile): EmptyExplanation {
 
   if (profile.countries.length <= 3) {
     candidates.push({
-      label: 'Добавить Казахстан и Турцию в список стран',
+      label: L('Добавить Казахстан и Турцию в список стран', 'Ел тізіміне Қазақстан мен Түркияны қосу'),
       gain: count({
         ...profile,
         countries: Array.from(new Set([...profile.countries, 'KZ' as const, 'TR' as const])),
@@ -64,20 +69,32 @@ export function explainEmpty(profile: Profile): EmptyExplanation {
 
   const bits: string[] = []
   if (profile.fields.length) {
-    const word = plural(profile.fields.length, 'направление', 'направления', 'направления')
+    const word = L(
+      plural(profile.fields.length, 'направление', 'направления', 'направления'),
+      'бағыт',
+    )
     bits.push(`${word} ${listOf(profile.fields.map((f) => softLower(FIELD_LABEL[f])), 2)}`)
   }
   if (profile.countries.length) {
-    const word = plural(profile.countries.length, 'страна', 'страны', 'страны')
+    const word = L(plural(profile.countries.length, 'страна', 'страны', 'страны'), 'ел')
     bits.push(`${word} ${listOf(profile.countries.map((c) => COUNTRY_LABEL[c]), 2)}`)
   }
-  bits.push(`бюджет «${softLower(BUDGET_LABEL[profile.budget])}»`)
-  if (!profile.relocation) bits.push('без переезда')
+  bits.push(L(
+    `бюджет «${softLower(BUDGET_LABEL[profile.budget])}»`,
+    `бюджет «${softLower(BUDGET_LABEL[profile.budget])}»`,
+  ))
+  if (!profile.relocation) bits.push(L('без переезда', 'көшусіз'))
 
   const cause =
     useful.length > 0
-      ? `В демо-базе нет программ, где сходятся сразу ${listOf(bits, 4)}. Чаще всего дело в одном ответе — вот что даст больше всего вариантов.`
-      : `В демо-базе нет программ под сочетание: ${listOf(bits, 4)}. База прототипа ограничена 32 программами, так что это ограничение данных, а не твоего профиля.`
+      ? L(
+          `В демо-базе нет программ, где сходятся сразу ${listOf(bits, 4)}. Чаще всего дело в одном ответе — вот что даст больше всего вариантов.`,
+          `Демо-базада ${listOf(bits, 4)} бірден түйісетін бағдарлама жоқ. Көбіне мәселе бір жауапта — ең көп нұсқа беретіні мынау.`,
+        )
+      : L(
+          `В демо-базе нет программ под сочетание: ${listOf(bits, 4)}. База прототипа ограничена ${PROGRAMS.length} программами, так что это ограничение данных, а не твоего профиля.`,
+          `Демо-базада мына тіркесімге бағдарлама жоқ: ${listOf(bits, 4)}. Прототип базасы ${PROGRAMS.length} бағдарламамен шектелген, яғни бұл — профиліңнің емес, деректердің шектеуі.`,
+        )
 
   return { cause, relaxations: useful.slice(0, 3) }
 }

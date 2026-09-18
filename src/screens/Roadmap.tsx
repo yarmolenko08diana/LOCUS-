@@ -3,23 +3,29 @@ import { useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, DemoNote, Empty, Meter } from '../components/ui'
 import { useApp } from '../store/app'
 import type { RoadmapTask, TaskCategory } from '../types'
+import { useL } from '../i18n/LangContext'
+import { nudge } from '../engine/tone'
 import { countOf } from '../lib/text'
 
-const CATEGORY: Record<TaskCategory, { label: string; icon: string; tone: 'brand' | 'mint' | 'sun' | 'coral' | 'neutral' }> = {
-  exam: { label: 'Экзамен', icon: '📝', tone: 'brand' },
-  document: { label: 'Документы', icon: '📄', tone: 'sun' },
-  academic: { label: 'Учёба', icon: '📚', tone: 'mint' },
-  activity: { label: 'Активности', icon: '🚀', tone: 'coral' },
-  essay: { label: 'Эссе', icon: '✍️', tone: 'brand' },
-  contest: { label: 'Конкурсы', icon: '🏆', tone: 'sun' },
-  scholarship: { label: 'Стипендии', icon: '💰', tone: 'mint' },
-  research: { label: 'Разобраться', icon: '🔎', tone: 'neutral' },
+const CATEGORY: Record<
+  TaskCategory,
+  { label: string; labelKk: string; icon: string; tone: 'brand' | 'mint' | 'sun' | 'coral' | 'neutral' }
+> = {
+  exam: { label: 'Экзамен', labelKk: 'Емтихан', icon: '📝', tone: 'brand' },
+  document: { label: 'Документы', labelKk: 'Құжаттар', icon: '📄', tone: 'sun' },
+  academic: { label: 'Учёба', labelKk: 'Оқу', icon: '📚', tone: 'mint' },
+  activity: { label: 'Активности', labelKk: 'Белсенділік', icon: '🚀', tone: 'coral' },
+  essay: { label: 'Эссе', labelKk: 'Эссе', icon: '✍️', tone: 'brand' },
+  contest: { label: 'Конкурсы', labelKk: 'Байқаулар', icon: '🏆', tone: 'sun' },
+  scholarship: { label: 'Стипендии', labelKk: 'Шәкіртақылар', icon: '💰', tone: 'mint' },
+  research: { label: 'Разобраться', labelKk: 'Анықтау', icon: '🔎', tone: 'neutral' },
 }
 
 function TaskRow({
   task, done, onToggle, isNext,
 }: { task: RoadmapTask; done: boolean; onToggle: () => void; isNext: boolean }) {
   const meta = CATEGORY[task.category]
+  const L = useL()
   const [open, setOpen] = useState(false)
 
   return (
@@ -34,7 +40,11 @@ function TaskRow({
         onClick={onToggle}
         role="checkbox"
         aria-checked={done}
-        aria-label={done ? `Снять отметку: ${task.title}` : `Отметить выполненным: ${task.title}`}
+        aria-label={
+          done
+            ? L(`Снять отметку: ${task.title}`, `Белгіні алу: ${task.title}`)
+            : L(`Отметить выполненным: ${task.title}`, `Орындалды деп белгілеу: ${task.title}`)
+        }
         className="group/check -m-2 grid h-10 w-10 shrink-0 place-items-center rounded-full"
       >
         <span
@@ -53,9 +63,9 @@ function TaskRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={meta.tone}>{meta.icon} {meta.label}</Badge>
+          <Badge tone={meta.tone}>{meta.icon} {L(meta.label, meta.labelKk)}</Badge>
           <span className="text-[12px] font-semibold text-ink-muted">{task.window}</span>
-          {isNext && !done && <Badge tone="brand">следующий шаг</Badge>}
+          {isNext && !done && <Badge tone="brand">{L('следующий шаг', 'келесі қадам')}</Badge>}
         </div>
         <p className={`mt-1.5 text-[15px] font-bold leading-snug ${done ? 'line-through' : ''}`}>{task.title}</p>
 
@@ -65,13 +75,15 @@ function TaskRow({
           aria-expanded={open}
           className="-mx-1 mt-0.5 min-h-[32px] px-1 py-1.5 text-[13px] font-semibold text-brand-600 hover:underline"
         >
-          {open ? 'Скрыть' : 'Зачем это'}
+          {open ? L('Скрыть', 'Жасыру') : L('Зачем это', 'Бұл не үшін')}
         </button>
 
         {open && (
           <div className="mt-2 animate-fade-up rounded-xl bg-paper px-3.5 py-3">
             <p className="text-[14px] leading-relaxed text-ink-soft">{task.why}</p>
-            <p className="mt-2 text-[12px] font-semibold text-ink-muted">Примерные затраты: {task.effort}</p>
+            <p className="mt-2 text-[12px] font-semibold text-ink-muted">
+              {L('Примерные затраты', 'Болжамды шығын')}: {task.effort}
+            </p>
             {task.source && (
               <a
                 href={task.source.url}
@@ -79,7 +91,7 @@ function TaskRow({
                 rel="noreferrer noopener"
                 className="mt-2 inline-block text-[13px] font-bold text-brand-600 underline underline-offset-2"
               >
-                Источник: {task.source.label} ↗
+                {L('Источник', 'Дереккөз')}: {task.source.label} ↗
               </a>
             )}
           </div>
@@ -91,6 +103,7 @@ function TaskRow({
 
 export function Roadmap() {
   const { roadmap, tasks, next, done, toggleDone, completed, recommendations, profile } = useApp()
+  const L = useL()
   const navigate = useNavigate()
   const [filter, setFilter] = useState<TaskCategory | 'all'>('all')
 
@@ -113,9 +126,14 @@ export function Roadmap() {
   if (!completed) {
     return (
       <Empty
-        title="План появится после анкеты"
-        description="Шаги зависят от твоего этапа, экзаменов и требований программ в подборе."
-        action={<Button onClick={() => navigate('/survey')}>Заполнить анкету</Button>}
+        title={L('План появится после анкеты', 'Жоспар сауалнамадан кейін пайда болады')}
+        description={L(
+          'Шаги зависят от твоего этапа, экзаменов и требований программ в подборе.',
+          'Қадамдар кезеңіңе, емтихандарыңа және таңдаудағы бағдарламалардың талаптарына байланысты.',
+        )}
+        action={
+          <Button onClick={() => navigate('/survey')}>{L('Заполнить анкету', 'Сауалнаманы толтыру')}</Button>
+        }
       />
     )
   }
@@ -123,25 +141,30 @@ export function Roadmap() {
   return (
     <div className="animate-fade-up space-y-6">
       <header>
-        <p className="label mb-2">Шаг 5 · План</p>
+        <p className="label mb-2">{L('Шаг 5 · План', '5-қадам · Жоспар')}</p>
         <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] sm:text-4xl">
-          Маршрут до поступления в {profile.intakeYear}
+          {L(`Маршрут до поступления в ${profile.intakeYear}`, `${profile.intakeYear} жылы оқуға түсуге дейінгі маршрут`)}
         </h1>
         <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-ink-soft">
-          {countOf(tasks.length, 'шаг', 'шага', 'шагов')}, собранных под требования программ из твоего топа.
-          Отмечай выполненное — следующий шаг обновляется сам.
+          {L(
+            `${countOf(tasks.length, 'шаг', 'шага', 'шагов')}, собранных под требования программ из твоего топа. Отмечай выполненное — следующий шаг обновляется сам.`,
+            `Топ бағдарламаларыңның талаптарына сай жиналған ${tasks.length} қадам. Орындалғанын белгіле — келесі қадам өзі жаңарады.`,
+          )}
         </p>
       </header>
 
       {next ? (
         <Card className="overflow-hidden border-brand-200">
           <div className="bg-brand-900 px-6 py-5 text-white">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-300">Следующее действие</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-300">
+              {nudge(profile.tone)}
+            </p>
             <h2 className="mt-2 text-[21px] font-extrabold leading-snug sm:text-[24px]">{next.title}</h2>
             <p className="mt-2.5 text-[15px] leading-relaxed text-brand-100">{next.why}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">
-                {CATEGORY[next.category].icon} {CATEGORY[next.category].label}
+                {CATEGORY[next.category].icon}{' '}
+                {L(CATEGORY[next.category].label, CATEGORY[next.category].labelKk)}
               </span>
               <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">{next.window}</span>
               <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">{next.effort}</span>
@@ -149,7 +172,7 @@ export function Roadmap() {
           </div>
           <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
             <Button size="lg" onClick={() => toggleDone(next.id)} className="sm:w-auto">
-              Отметить выполненным ✓
+              {L('Отметить выполненным ✓', 'Орындалды деп белгілеу ✓')}
             </Button>
             {next.source && (
               <a
@@ -158,20 +181,22 @@ export function Roadmap() {
                 rel="noreferrer noopener"
                 className="text-[14px] font-bold text-brand-600 underline underline-offset-2"
               >
-                Открыть источник: {next.source.label} ↗
+                {L('Открыть источник', 'Дереккөзді ашу')}: {next.source.label} ↗
               </a>
             )}
           </div>
         </Card>
       ) : (
         <Card className="p-6">
-          <h2 className="text-[20px] font-extrabold">Все шаги отмечены</h2>
+          <h2 className="text-[20px] font-extrabold">{L('Все шаги отмечены', 'Барлық қадам белгіленді')}</h2>
           <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">
-            План пройден полностью. Если что-то изменилось — обнови анкету, и маршрут пересоберётся
-            под новые условия.
+            {L(
+              'План пройден полностью. Если что-то изменилось — обнови анкету, и маршрут пересоберётся под новые условия.',
+              'Жоспар толық орындалды. Бірдеңе өзгерсе — сауалнаманы жаңарт, маршрут жаңа шарттарға сай қайта құрылады.',
+            )}
           </p>
           <Button variant="secondary" className="mt-4" onClick={() => navigate('/survey')}>
-            Обновить анкету
+            {L('Обновить анкету', 'Сауалнаманы жаңарту')}
           </Button>
         </Card>
       )}
@@ -180,8 +205,8 @@ export function Roadmap() {
         <Meter
           value={progress}
           tone={progress === 100 ? 'mint' : 'brand'}
-          label="Прогресс по плану"
-          sublabel={`${doneCount} из ${tasks.length}`}
+          label={L('Прогресс по плану', 'Жоспар барысы')}
+          sublabel={L(`${doneCount} из ${tasks.length}`, `${tasks.length}-ден ${doneCount}`)}
         />
         <div className="mt-4 flex flex-wrap gap-2">
           <button
@@ -191,7 +216,7 @@ export function Roadmap() {
               filter === 'all' ? 'border-brand-500 bg-brand-50 text-brand-900' : 'border-line text-ink-soft hover:border-brand-300'
             }`}
           >
-            Все
+            {L('Все', 'Барлығы')}
           </button>
           {(Object.keys(CATEGORY) as TaskCategory[]).map((c) => (
             <button
@@ -202,7 +227,7 @@ export function Roadmap() {
                 filter === c ? 'border-brand-500 bg-brand-50 text-brand-900' : 'border-line text-ink-soft hover:border-brand-300'
               }`}
             >
-              {CATEGORY[c].icon} {CATEGORY[c].label}
+              {CATEGORY[c].icon} {L(CATEGORY[c].label, CATEGORY[c].labelKk)}
             </button>
           ))}
         </div>
@@ -243,7 +268,9 @@ export function Roadmap() {
       </div>
 
       <section>
-        <h2 className="mb-3 text-[19px] font-extrabold tracking-[-0.01em]">Периоды подачи по твоему топу</h2>
+        <h2 className="mb-3 text-[19px] font-extrabold tracking-[-0.01em]">
+          {L('Периоды подачи по твоему топу', 'Топ бойынша өтінім кезеңдері')}
+        </h2>
         <Card>
           <ul className="divide-y divide-line">
             {deadlines.map((d, i) => (
@@ -260,7 +287,7 @@ export function Roadmap() {
                     rel="noreferrer noopener"
                     className="-mx-1 inline-block px-1 py-2 text-[12px] font-semibold text-ink-muted underline underline-offset-2"
                   >
-                    сверить ↗
+                    {L('сверить', 'тексеру')} ↗
                   </a>
                 </div>
               </li>
@@ -268,8 +295,10 @@ export function Roadmap() {
           </ul>
         </Card>
         <DemoNote className="mt-3">
-          Периоды указаны ориентировочно по демо-данным. Точные даты каждого года публикует
-          сам вуз — ссылка «сверить» ведёт на официальную страницу приёма.
+          {L(
+            'Периоды указаны ориентировочно по демо-данным. Точные даты каждого года публикует сам вуз — ссылка «сверить» ведёт на официальную страницу приёма.',
+            'Кезеңдер демо-дерек бойынша болжаммен берілген. Әр жылдың нақты күндерін ЖОО өзі жариялайды — «тексеру» сілтемесі ресми қабылдау бетіне апарады.',
+          )}
         </DemoNote>
       </section>
     </div>

@@ -13,7 +13,7 @@ import { matchScholarships } from '../engine/scholarships'
 import { buildCalendar } from '../engine/calendar'
 import { suggestActivities, type ActivitySuggestion } from '../engine/activities'
 import { summarizeAchievements, type AchievementSummary } from '../engine/achievements'
-import { setEngineLang } from '../i18n/lang'
+import { L, setEngineLang } from '../i18n/lang'
 import { LangProvider } from '../i18n/LangContext'
 import { clear, load, save, type PersistedShape } from './storage'
 
@@ -173,8 +173,14 @@ function describeChange(
   const gone = before.slice(0, 3).filter((r) => !afterTop.includes(r.program.id))
   const details: string[] = []
 
-  appeared.forEach((r) => details.push(`Появилось в топе: ${r.program.universityShort} — ${r.program.program}`))
-  gone.forEach((r) => details.push(`Ушло из топа: ${r.program.universityShort}`))
+  appeared.forEach((r) => details.push(L(
+    `Появилось в топе: ${r.program.universityShort} — ${r.program.program}`,
+    `Топқа қосылды: ${r.program.universityShort} — ${r.program.program}`,
+  )))
+  gone.forEach((r) => details.push(L(
+    `Ушло из топа: ${r.program.universityShort}`,
+    `Топтан шықты: ${r.program.universityShort}`,
+  )))
 
   if (appeared.length === 0 && gone.length === 0) {
     const beforeScore = before[0]?.score ?? 0
@@ -182,15 +188,21 @@ function describeChange(
     const diff = afterScore - beforeScore
     if (Math.abs(diff) < 2) return null
     return {
-      headline: 'Совпадение пересчитано',
+      headline: L('Совпадение пересчитано', 'Сәйкестік қайта есептелді'),
       details: [
-        `${after[0].program.universityShort}: ${beforeScore}% → ${afterScore}% совпадения`,
+        L(
+          `${after[0].program.universityShort}: ${beforeScore}% → ${afterScore}% совпадения`,
+          `${after[0].program.universityShort}: сәйкестік ${beforeScore}% → ${afterScore}%`,
+        ),
       ],
     }
   }
 
   return {
-    headline: `Подбор обновился: ${appeared.length} ${appeared.length === 1 ? 'новый вариант' : 'новых варианта'} в топ-3`,
+    headline: L(
+      `Подбор обновился: ${appeared.length} ${appeared.length === 1 ? 'новый вариант' : 'новых варианта'} в топ-3`,
+      `Таңдау жаңарды: топ-3-те ${appeared.length} жаңа нұсқа`,
+    ),
     details: details.slice(0, 4),
   }
 }
@@ -212,12 +224,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // рекомендаций всегда совпадают с языком интерфейса.
   setEngineLang(lang)
 
+  /*
+   * lang в зависимостях намеренно: движок читает язык из модуля i18n/lang, а не
+   * из аргументов, поэтому линтер не видит этой связи. Без lang переключение
+   * языка не пересчитало бы тексты рекомендаций, плана и стипендий.
+   */
+  /* eslint-disable react-hooks/exhaustive-deps */
   const recommendations = useMemo(() => recommend(profile), [profile, lang])
   const diagnosis = useMemo(() => diagnose(profile, recommendations), [profile, recommendations, lang])
   const roadmap = useMemo(() => buildRoadmap(profile, recommendations), [profile, recommendations, lang])
   const tasks = useMemo(() => allTasks(roadmap), [roadmap])
   const next = useMemo(() => nextAction(roadmap, done), [roadmap, done])
   const scholarships = useMemo(() => matchScholarships(profile), [profile, lang])
+  /* eslint-enable react-hooks/exhaustive-deps */
   const calendar = useMemo(
     () => buildCalendar(profile, recommendations, scholarships),
     [profile, recommendations, scholarships],

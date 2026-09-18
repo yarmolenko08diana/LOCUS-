@@ -3,12 +3,22 @@ import type { ChanceLevel, Recommendation } from '../types'
 import { Badge, Card, Meter } from './ui'
 import { COUNTRY_FLAG, COUNTRY_LABEL } from '../data/taxonomy'
 import { scoreLabel } from '../engine/match'
+import { useL } from '../i18n/LangContext'
+import { L } from '../i18n/lang'
 
-export const CHANCE_META: Record<ChanceLevel, { label: string; tone: 'mint' | 'sun' | 'coral' | 'neutral' }> = {
-  high: { label: 'Шансы высокие', tone: 'mint' },
-  medium: { label: 'Шансы средние', tone: 'sun' },
-  low: { label: 'Шансы низкие', tone: 'coral' },
-  unknown: { label: 'Шансы не оценены', tone: 'neutral' },
+export const CHANCE_META: Record<
+  ChanceLevel,
+  { label: string; labelKk: string; tone: 'mint' | 'sun' | 'coral' | 'neutral' }
+> = {
+  high: { label: 'Шансы высокие', labelKk: 'Мүмкіндік жоғары', tone: 'mint' },
+  medium: { label: 'Шансы средние', labelKk: 'Мүмкіндік орташа', tone: 'sun' },
+  low: { label: 'Шансы низкие', labelKk: 'Мүмкіндік төмен', tone: 'coral' },
+  unknown: { label: 'Шансы не оценены', labelKk: 'Мүмкіндік бағаланбаған', tone: 'neutral' },
+}
+
+/** Подпись уровня шансов на текущем языке. */
+export function chanceLabel(level: ChanceLevel): string {
+  return L(CHANCE_META[level].label, CHANCE_META[level].labelKk)
 }
 
 export function money(n: number): string {
@@ -17,9 +27,9 @@ export function money(n: number): string {
 
 export function tuitionLabel(rec: Recommendation): string {
   const [lo, hi] = rec.program.tuitionUsd
-  if (lo === 0 && hi === 0) return 'Бесплатно по гранту вуза'
-  if (lo === hi) return `${money(lo)} в год`
-  return `${money(lo)} – ${money(hi)} в год`
+  if (lo === 0 && hi === 0) return L('Бесплатно по гранту вуза', 'ЖОО гранты бойынша тегін')
+  if (lo === hi) return `${money(lo)} ${L('в год', 'жылына')}`
+  return `${money(lo)} – ${money(hi)} ${L('в год', 'жылына')}`
 }
 
 export function ProgramCard({
@@ -33,6 +43,7 @@ export function ProgramCard({
   onSave: () => void
 }) {
   const { program: p } = rec
+  const Lc = useL()
   const chance = CHANCE_META[rec.chance.level]
 
   return (
@@ -60,15 +71,19 @@ export function ProgramCard({
 
           <div className="shrink-0 text-right">
             <p className="text-[28px] font-extrabold leading-none tabular-nums text-brand-600">{rec.score}%</p>
-            <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">совпадение</p>
+            <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-muted">
+              {Lc('совпадение', 'сәйкестік')}
+            </p>
           </div>
         </div>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <Badge tone="brand">{scoreLabel(rec.score)}</Badge>
-          <Badge tone={chance.tone}>{chance.label}</Badge>
-          {p.grant.available && <Badge tone="mint">Есть грант</Badge>}
-          {!rec.affordable && !p.grant.available && <Badge tone="coral">Выше бюджета</Badge>}
+          <Badge tone={chance.tone}>{Lc(chance.label, chance.labelKk)}</Badge>
+          {p.grant.available && <Badge tone="mint">{Lc('Есть грант', 'Грант бар')}</Badge>}
+          {!rec.affordable && !p.grant.available && (
+            <Badge tone="coral">{Lc('Выше бюджета', 'Бюджеттен жоғары')}</Badge>
+          )}
         </div>
 
         <ul className="mt-4 space-y-2.5">
@@ -90,30 +105,35 @@ export function ProgramCard({
 
         {rec.watchouts.length > 0 && (
           <p className="mt-3 rounded-xl border border-sun-100 bg-sun-50 px-3 py-2.5 text-[13px] leading-relaxed text-sun-700">
-            <span className="font-bold">Обрати внимание. </span>
+            <span className="font-bold">{Lc('Обрати внимание', 'Назар аудар')}. </span>
             {rec.watchouts[0].text}
           </p>
         )}
 
         <div className="mt-4 grid grid-cols-2 gap-4 border-t border-line pt-4 sm:grid-cols-3">
           <div>
-            <p className="label mb-1">Обучение</p>
+            <p className="label mb-1">{Lc('Обучение', 'Оқу')}</p>
             <p className="text-[14px] font-bold leading-tight">{tuitionLabel(rec)}</p>
           </div>
           <div>
-            <p className="label mb-1">Год с жильём</p>
+            <p className="label mb-1">{Lc('Год с жильём', 'Тұрғын үймен бір жыл')}</p>
             <p className="text-[14px] font-bold leading-tight tabular-nums">≈ {money(rec.yearlyCostUsd)}</p>
           </div>
           <div className="col-span-2 sm:col-span-1">
-            <p className="label mb-1">Язык и срок</p>
+            <p className="label mb-1">{Lc('Язык и срок', 'Тіл және мерзім')}</p>
             <p className="text-[14px] font-bold leading-tight">
-              {p.languages.map((l) => l.toUpperCase()).join('/')} · {p.durationYears} года
+              {p.languages.map((l) => l.toUpperCase()).join('/')} · {p.durationYears} {Lc('года', 'жыл')}
             </p>
           </div>
         </div>
 
         <div className="mt-4">
-          <Meter value={rec.score} tone="brand" label="Совпадение с профилем" sublabel={`${rec.score} из 100`} />
+          <Meter
+            value={rec.score}
+            tone="brand"
+            label={Lc('Совпадение с профилем', 'Профильмен сәйкестік')}
+            sublabel={Lc(`${rec.score} из 100`, `100-ден ${rec.score}`)}
+          />
         </div>
       </div>
 
@@ -122,7 +142,7 @@ export function ProgramCard({
           to={`/program/${p.id}`}
           className="flex-1 py-3 text-center text-[14px] font-bold text-brand-700 transition-colors hover:bg-brand-50"
         >
-          Разбор
+          {Lc('Разбор', 'Талдау')}
         </Link>
         <button
           type="button"
@@ -132,13 +152,13 @@ export function ProgramCard({
             inCompare ? 'bg-brand-50 text-brand-700' : 'text-ink-soft hover:bg-paper'
           }`}
         >
-          {inCompare ? 'В сравнении ✓' : 'Сравнить'}
+          {inCompare ? Lc('В сравнении ✓', 'Салыстыруда ✓') : Lc('Сравнить', 'Салыстыру')}
         </button>
         <button
           type="button"
           onClick={onSave}
           aria-pressed={saved}
-          aria-label={saved ? 'Убрать из избранного' : 'Сохранить'}
+          aria-label={saved ? Lc('Убрать из избранного', 'Таңдаулыдан алу') : Lc('Сохранить', 'Сақтау')}
           className={`w-14 shrink-0 text-center text-[15px] transition-colors ${
             saved ? 'bg-sun-50 text-sun-600' : 'text-ink-muted hover:bg-paper'
           }`}

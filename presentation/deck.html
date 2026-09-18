@@ -111,6 +111,7 @@
   table.w td { padding: 8px 0; border-top: 1px solid var(--line); color: var(--ink-soft); vertical-align: top; }
   table.w td.k { font-weight: 700; color: var(--ink); width: 200px; }
   table.w td.w8 { width: 68px; font-weight: 800; color: var(--brand-600); font-variant-numeric: tabular-nums; }
+  table.w.tight td { padding: 5px 0; }
 </style>
 </head>
 <body>
@@ -140,11 +141,12 @@
     <div style="margin-top:26px;display:flex;gap:10px;flex-wrap:wrap">
       <span class="pill">Ученики 10–11 класса и выпускники, Казахстан</span>
       <span class="pill">Бакалавриат в стране и за рубежом</span>
+      <span class="pill">Қазақша және по-русски</span>
       <span class="pill">Код кейса: LOCUSCASE2</span>
     </div>
   </div>
 
-  <div class="foot"><span>Qadam · маршрут поступления</span><span>1 / 8</span></div>
+  <div class="foot"><span>Qadam · маршрут поступления</span><span>1 / 9</span></div>
 </section>
 
 <!-- 2 · Проблема -->
@@ -178,7 +180,7 @@
     </div>
   </div>
 
-  <div class="foot"><span>Qadam · маршрут поступления</span><span>2 / 8</span></div>
+  <div class="foot"><span>Qadam · маршрут поступления</span><span>2 / 9</span></div>
 </section>
 
 <!-- 3 · Решение -->
@@ -220,7 +222,7 @@
     </div>
   </div>
 
-  <div class="foot"><span>Qadam · маршрут поступления</span><span>3 / 8</span></div>
+  <div class="foot"><span>Qadam · маршрут поступления</span><span>3 / 9</span></div>
 </section>
 
 <!-- 4 · Демонстрация -->
@@ -260,48 +262,101 @@
     </div>
   </div>
 
-  <div class="foot"><span>Полный путь: анкета → диагностика → подбор → сравнение → план</span><span>4 / 8</span></div>
+  <div class="foot"><span>Полный путь: анкета → диагностика → подбор → сравнение → план</span><span>4 / 9</span></div>
 </section>
 
 <!-- 5 · Персонализация -->
 <section class="slide">
   <p class="kicker">04 · Персонализация</p>
-  <h2 style="margin-top:14px">Каждый процент можно раскрыть</h2>
+  <h2 style="margin-top:10px">Каждый процент можно раскрыть</h2>
 
-  <div style="display:grid;grid-template-columns:1fr 1.02fr;gap:28px;margin-top:18px;align-items:start">
+  <div style="display:grid;grid-template-columns:1.18fr .82fr;gap:26px;margin-top:16px;align-items:start">
     <div>
-      <p style="margin-bottom:14px">Совпадение — не оценка из чёрного ящика. Оно складывается из шести критериев с
-      фиксированными весами, и пользователь видит раскладку целиком.</p>
-      <table class="w">
+      <p class="small" style="margin-bottom:10px">Совпадение — не оценка из чёрного ящика: семь критериев с фиксированными весами.</p>
+      <table class="w tight">
         <tr><th>Критерий</th><th style="text-align:right">Вес</th></tr>
-        <tr><td class="k">Направление</td><td class="w8" style="text-align:right">28</td></tr>
-        <tr><td class="k">Проходимость</td><td class="w8" style="text-align:right">22</td></tr>
-        <tr><td class="k">Бюджет</td><td class="w8" style="text-align:right">20</td></tr>
-        <tr><td class="k">География</td><td class="w8" style="text-align:right">12</td></tr>
-        <tr><td class="k">Язык</td><td class="w8" style="text-align:right">10</td></tr>
-        <tr><td class="k">Приоритеты</td><td class="w8" style="text-align:right">8</td></tr>
+        <tr><td class="k">Направление</td><td class="w8" style="text-align:right">26</td></tr>
+        <tr><td class="k">Проходимость</td><td class="w8" style="text-align:right">20</td></tr>
+        <tr><td class="k">Бюджет</td><td class="w8" style="text-align:right">18</td></tr>
+        <tr><td class="k">География</td><td class="w8" style="text-align:right">11</td></tr>
+        <tr><td class="k">Язык</td><td class="w8" style="text-align:right">9</td></tr>
+        <tr><td class="k">Достижения</td><td class="w8" style="text-align:right">9</td></tr>
+        <tr><td class="k">Приоритеты</td><td class="w8" style="text-align:right">7</td></tr>
       </table>
-      <ul class="clean" style="margin-top:16px">
+      <ul class="clean" style="margin-top:12px">
         <li><span class="dot" style="background:var(--mint)"></span><span><b>Направление — это ворота.</b> Остальные критерии приглушаются, если программа не про то, чем человек хочет заниматься.</span></li>
-        <li><span class="dot" style="background:var(--mint)"></span><span><b>Проход впритык ≠ проход с запасом.</b> Балл ровно на пороге даёт 0.85, а не 1.0.</span></li>
+        <li><span class="dot" style="background:var(--mint)"></span><span><b>Проход впритык ≠ проход с запасом:</b> балл ровно на пороге даёт 0.85, а не 1.0.</span></li>
       </ul>
+      <div class="card flat" style="margin-top:12px;background:var(--sun-50);border-color:#FFEAC2">
+        <h3 style="font-size:16px">Достижения весят как в реальном приёме</h3>
+        <p class="small" style="margin-top:7px">У программы есть параметр «насколько вуз читает заявку целиком» (1–5). Там, где решают
+        только баллы, добавленная олимпиада не меняет ничего.</p>
+      </div>
     </div>
     <div>
       <div class="shot"><img src="assets/breakdown.png" alt=""></div>
       <div class="card flat" style="margin-top:16px;background:var(--mint-50);border-color:#CFF3E4">
         <h3 style="font-size:17px">Продукт реагирует на изменения</h3>
-        <p class="small" style="margin-top:9px">Смена бюджета, страны, интереса или экзамена пересобирает подбор, объяснения и план.
-        Пользователь видит это явно: «Подбор обновился — 2 новых варианта в топ-3», со списком того, что именно изменилось.</p>
+        <p class="small" style="margin-top:9px">Смена бюджета, страны, интереса или экзамена пересобирает подбор, объяснения и план —
+        и пользователь видит это явно: «Подбор обновился — 2 новых варианта в топ-3».</p>
       </div>
     </div>
   </div>
 
-  <div class="foot"><span>Qadam · маршрут поступления</span><span>5 / 8</span></div>
+  <div class="foot"><span>Qadam · маршрут поступления</span><span>5 / 9</span></div>
+</section>
+
+<!-- 6 · Что усиливает маршрут -->
+<section class="slide">
+  <p class="kicker">05 · Возможности</p>
+  <h2 style="margin-top:12px">Что усиливает маршрут</h2>
+
+  <div style="display:grid;grid-template-columns:1.05fr .95fr;gap:26px;margin-top:20px;align-items:start">
+    <div>
+      <div class="grid g2">
+        <div class="card flat">
+          <h3 style="font-size:16px">🏅 Достижения меняют маршрут</h3>
+          <p class="small" style="margin-top:8px">Олимпиады, хакатоны, исследования, волонтёрство. Добавленное достижение поднимает вузы,
+          где заявку читают целиком, и убирает из плана шаг, который оно закрыло.</p>
+        </div>
+        <div class="card flat">
+          <h3 style="font-size:16px">💰 Подбор стипендий</h3>
+          <p class="small" style="margin-top:8px">15 грантов с источниками: что подходит по анкете, а что пока не закрыто.
+          Их дедлайны часто раньше вузовских, поэтому попадают в план отдельными шагами.</p>
+        </div>
+        <div class="card flat">
+          <h3 style="font-size:16px">🗓 Календарь дедлайнов</h3>
+          <p class="small" style="margin-top:8px">Периоды подачи, стипендий и экзаменов по месяцам. Прототип работает без сервера,
+          и об этом сказано прямо: писем и push пока нет.</p>
+        </div>
+        <div class="card flat">
+          <h3 style="font-size:16px">🚀 Активности под заявку</h3>
+          <p class="small" style="margin-top:8px">Эссе, CV, письма, волонтёрство, исследования, для технарей — хакатоны, CTF и олимпиады.
+          Не каталог, а то, чего не хватает в этом профиле.</p>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="shot"><img src="assets/chance.png" alt=""></div>
+      <p class="small" style="margin-top:9px;color:var(--ink-muted)">Оценка шансов раскрывается по пунктам: каждый фактор со своим
+      вердиктом и реальными числами из профиля.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <span class="pill" style="background:var(--mint-50);border-color:#CFF3E4;color:var(--ink)">Қазақша және по-русски</span>
+        <span class="pill" style="background:var(--mint-50);border-color:#CFF3E4;color:var(--ink)">Тёмная тема</span>
+        <span class="pill" style="background:var(--mint-50);border-color:#CFF3E4;color:var(--ink)">НИШ, IB и TOEFL</span>
+        <span class="pill" style="background:var(--mint-50);border-color:#CFF3E4;color:var(--ink)">Стиль общения</span>
+        <span class="pill" style="background:var(--mint-50);border-color:#CFF3E4;color:var(--ink)">Избранное</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot"><span>Стипендии · календарь · активности · избранное</span><span>6 / 9</span></div>
 </section>
 
 <!-- 6 · Технология -->
 <section class="slide">
-  <p class="kicker">05 · Технология</p>
+  <p class="kicker">06 · Технология</p>
   <h2 style="margin-top:14px">Архитектура и обоснование решений</h2>
 
   <div class="grid g2" style="margin-top:26px">
@@ -328,12 +383,12 @@
     </div>
   </div>
 
-  <div class="foot"><span>Полная техническая справка — в README репозитория</span><span>6 / 8</span></div>
+  <div class="foot"><span>Полная техническая справка — в README репозитория</span><span>7 / 9</span></div>
 </section>
 
 <!-- 7 · Преимущества -->
 <section class="slide">
-  <p class="kicker">06 · Преимущества</p>
+  <p class="kicker">07 · Преимущества</p>
   <h2 style="margin-top:14px">Что отличает Qadam</h2>
 
   <div class="grid g2" style="margin-top:26px">
@@ -360,27 +415,27 @@
   </div>
 
   <div class="grid g4" style="margin-top:22px">
-    <div><div class="stat" style="color:var(--brand)">32</div><div class="stat-label">программы в демо-базе</div></div>
-    <div><div class="stat" style="color:var(--brand)">15</div><div class="stat-label">стран в подборе</div></div>
-    <div><div class="stat" style="color:var(--brand)">6</div><div class="stat-label">критериев с весами</div></div>
-    <div><div class="stat" style="color:var(--brand)">13</div><div class="stat-label">параметров сравнения</div></div>
+    <div><div class="stat" style="color:var(--brand)">105</div><div class="stat-label">программ в демо-базе</div></div>
+    <div><div class="stat" style="color:var(--brand)">19</div><div class="stat-label">стран в подборе</div></div>
+    <div><div class="stat" style="color:var(--brand)">15</div><div class="stat-label">стипендий и грантов</div></div>
+    <div><div class="stat" style="color:var(--brand)">7</div><div class="stat-label">критериев с весами</div></div>
   </div>
 
-  <div class="foot"><span>Qadam · маршрут поступления</span><span>7 / 8</span></div>
+  <div class="foot"><span>Qadam · маршрут поступления</span><span>8 / 9</span></div>
 </section>
 
 <!-- 8 · Команда и развитие -->
 <section class="slide dark">
-  <p class="kicker">07 · Команда и развитие</p>
+  <p class="kicker">08 · Команда и развитие</p>
   <h2 style="margin-top:14px">Куда продукт растёт дальше</h2>
 
   <div style="display:grid;grid-template-columns:1.25fr 1fr;gap:34px;margin-top:28px">
     <div>
       <ul class="clean">
         <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Живые данные вместо демо-базы.</b> Парсинг официальных страниц приёма и регулярная сверка требований и дедлайнов.</span></li>
-        <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Подбор стипендий.</b> Отдельный движок под гранты со своими дедлайнами, которые обычно наступают раньше вузовских.</span></li>
-        <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Календарь и напоминания.</b> План превращается в календарь с уведомлениями за недели до подачи.</span></li>
-        <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Работа с эссе.</b> Разбор мотивационного письма по требованиям конкретной программы.</span></li>
+        <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Настоящие напоминания.</b> Сейчас отметка живёт в браузере; дальше — письма и push за недели до подачи.</span></li>
+        <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Разбор эссе.</b> Сейчас продукт ведёт к мотивационному письму; дальше — разбор черновика под требования конкретной программы.</span></li>
+        <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Мобильное приложение.</b> В интерфейсе честно стоит плашка «Приложение — скоро», а не кнопка, которая никуда не ведёт.</span></li>
         <li><span class="dot" style="background:var(--mint)"></span><span style="color:var(--brand-100)"><b style="color:#fff">Аккаунты и школы.</b> Синхронизация между устройствами и режим для школьного координатора.</span></li>
       </ul>
     </div>
@@ -407,7 +462,7 @@
     </div>
   </div>
 
-  <div class="foot"><span>Qadam · LOCUS Startup Hackathon 2026 · кейс 02</span><span>8 / 8</span></div>
+  <div class="foot"><span>Qadam · LOCUS Startup Hackathon 2026 · кейс 02</span><span>9 / 9</span></div>
 </section>
 
 </body>

@@ -3,17 +3,18 @@ import { useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, DemoNote, Empty } from '../components/ui'
 import { ProgramCard } from '../components/ProgramCard'
 import { useApp } from '../store/app'
-import { BUDGETS, COUNTRIES, FIELDS } from '../data/taxonomy'
+import { budgets, countries, fields } from '../data/taxonomy'
+import { useL } from '../i18n/LangContext'
 import { countOf } from '../lib/text'
 import { explainEmpty } from '../engine/diagnoseEmpty'
 import type { BudgetTier, CountryCode, FieldId } from '../types'
 
 type Sort = 'match' | 'cost' | 'chance'
 
-const SORTS: { id: Sort; label: string }[] = [
-  { id: 'match', label: 'По совпадению' },
-  { id: 'cost', label: 'По стоимости' },
-  { id: 'chance', label: 'По шансам' },
+const SORTS: { id: Sort; label: string; labelKk: string }[] = [
+  { id: 'match', label: 'По совпадению', labelKk: 'Сәйкестік бойынша' },
+  { id: 'cost', label: 'По стоимости', labelKk: 'Құны бойынша' },
+  { id: 'chance', label: 'По шансам', labelKk: 'Мүмкіндік бойынша' },
 ]
 
 const CHANCE_ORDER = { high: 0, medium: 1, unknown: 2, low: 3 }
@@ -21,6 +22,7 @@ const CHANCE_ORDER = { high: 0, medium: 1, unknown: 2, low: 3 }
 /** Быстрая правка ключевых ответов прямо на экране подбора. */
 function QuickTune() {
   const { profile, setProfile } = useApp()
+  const L = useL()
   const [open, setOpen] = useState(false)
 
   return (
@@ -32,9 +34,14 @@ function QuickTune() {
         className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-paper"
       >
         <span className="min-w-0">
-          <span className="block text-[15px] font-bold">Поменять условия и увидеть разницу</span>
+          <span className="block text-[15px] font-bold">
+            {L('Поменять условия и увидеть разницу', 'Шарттарды өзгертіп, айырмашылықты көру')}
+          </span>
           <span className="mt-0.5 block text-[13px] text-ink-muted">
-            Бюджет, страны и главное направление — подбор пересчитается сразу
+            {L(
+              'Бюджет, страны и главное направление — подбор пересчитается сразу',
+              'Бюджет, елдер және басты бағыт — таңдау бірден қайта есептеледі',
+            )}
           </span>
         </span>
         <span aria-hidden className={`shrink-0 text-ink-muted transition-transform ${open ? 'rotate-180' : ''}`}>▾</span>
@@ -43,9 +50,9 @@ function QuickTune() {
       {open && (
         <div className="animate-fade-up space-y-5 border-t border-line px-5 py-5">
           <div>
-            <p className="label mb-2">Бюджет на обучение</p>
+            <p className="label mb-2">{L('Бюджет на обучение', 'Оқуға бюджет')}</p>
             <div className="flex flex-wrap gap-2">
-              {BUDGETS.map((b) => (
+              {budgets().map((b) => (
                 <button
                   key={b.id}
                   type="button"
@@ -63,9 +70,9 @@ function QuickTune() {
           </div>
 
           <div>
-            <p className="label mb-2">Страны</p>
+            <p className="label mb-2">{L('Страны', 'Елдер')}</p>
             <div className="flex flex-wrap gap-2">
-              {COUNTRIES.map((c) => {
+              {countries().map((c) => {
                 const active = profile.countries.includes(c.code)
                 return (
                   <button
@@ -92,9 +99,9 @@ function QuickTune() {
           </div>
 
           <div>
-            <p className="label mb-2">Главное направление</p>
+            <p className="label mb-2">{L('Главное направление', 'Басты бағыт')}</p>
             <div className="flex flex-wrap gap-2">
-              {FIELDS.map((f) => {
+              {fields().map((f) => {
                 const active = profile.fields[0] === f.id
                 return (
                   <button
@@ -130,19 +137,22 @@ function QuickTune() {
  */
 function EmptyResult({ onResetFilter }: { onResetFilter?: () => void }) {
   const { profile, setProfile } = useApp()
+  const L = useL()
   const { cause, relaxations } = useMemo(() => explainEmpty(profile), [profile])
 
   return (
     <Card className="p-6">
       <div aria-hidden className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-sun-50 text-xl">🧭</div>
-      <h2 className="text-[20px] font-extrabold leading-snug">Под эти условия ничего не нашлось</h2>
+      <h2 className="text-[20px] font-extrabold leading-snug">
+        {L('Под эти условия ничего не нашлось', 'Бұл шарттарға ештеңе табылмады')}
+      </h2>
       <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{cause}</p>
 
       {onResetFilter && (
         <p className="mt-3 text-[14px] text-ink-soft">
-          Сейчас включён фильтр «только в бюджет» —{' '}
+          {L('Сейчас включён фильтр «только в бюджет» — ', 'Қазір «тек бюджетке сай» сүзгісі қосулы — ')}
           <button type="button" onClick={onResetFilter} className="font-bold text-brand-600 underline underline-offset-2">
-            снять его
+            {L('снять его', 'оны алып тастау')}
           </button>
           .
         </p>
@@ -159,7 +169,7 @@ function EmptyResult({ onResetFilter }: { onResetFilter?: () => void }) {
               >
                 <span className="text-[15px] font-bold">{r.label}</span>
                 <span className="shrink-0 text-[13px] font-bold tabular-nums text-mint-600">
-                  +{countOf(r.gain, 'вариант', 'варианта', 'вариантов')}
+                  +{L(countOf(r.gain, 'вариант', 'варианта', 'вариантов'), `${r.gain} нұсқа`)}
                 </span>
               </button>
             </li>
@@ -168,7 +178,7 @@ function EmptyResult({ onResetFilter }: { onResetFilter?: () => void }) {
       )}
 
       <Button variant="secondary" className="mt-5" onClick={() => (window.location.hash = '#/survey')}>
-        Вернуться в анкету
+        {L('Вернуться в анкету', 'Сауалнамаға оралу')}
       </Button>
     </Card>
   )
@@ -178,6 +188,7 @@ export function Matches() {
   const {
     recommendations, completed, compare, toggleCompare, saved, toggleSaved, profile,
   } = useApp()
+  const L = useL()
   const navigate = useNavigate()
   const [sort, setSort] = useState<Sort>('match')
   const [onlyAffordable, setOnlyAffordable] = useState(false)
@@ -198,9 +209,14 @@ export function Matches() {
   if (!completed) {
     return (
       <Empty
-        title="Рекомендации появятся после анкеты"
-        description="Подбор строится из твоего профиля: направления, экзаменов, бюджета и стран."
-        action={<Button onClick={() => navigate('/survey')}>Заполнить анкету</Button>}
+        title={L('Рекомендации появятся после анкеты', 'Ұсыныстар сауалнамадан кейін пайда болады')}
+        description={L(
+          'Подбор строится из твоего профиля: направления, экзаменов, бюджета и стран.',
+          'Таңдау профиліңнен құралады: бағыт, емтихандар, бюджет және елдер.',
+        )}
+        action={
+          <Button onClick={() => navigate('/survey')}>{L('Заполнить анкету', 'Сауалнаманы толтыру')}</Button>
+        }
       />
     )
   }
@@ -208,13 +224,18 @@ export function Matches() {
   return (
     <div className="animate-fade-up space-y-6">
       <header>
-        <p className="label mb-2">Шаг 3 · Рекомендации</p>
+        <p className="label mb-2">{L('Шаг 3 · Рекомендации', '3-қадам · Ұсыныстар')}</p>
         <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] sm:text-4xl">
-          {countOf(list.length, 'подходящая программа', 'подходящие программы', 'подходящих программ')}
+          {L(
+            countOf(list.length, 'подходящая программа', 'подходящие программы', 'подходящих программ'),
+            `${list.length} қолайлы бағдарлама`,
+          )}
         </h1>
         <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-ink-soft">
-          Отсортированы по совпадению с твоим профилем. У каждой карточки написано,
-          что именно совпало и что стоит учесть.
+          {L(
+            'Отсортированы по совпадению с твоим профилем. У каждой карточки написано, что именно совпало и что стоит учесть.',
+            'Профиліңмен сәйкестігі бойынша сұрыпталған. Әр карточкада нақты не сәйкес келгені және нені ескеру керегі жазылған.',
+          )}
         </p>
       </header>
 
@@ -231,7 +252,7 @@ export function Matches() {
                 sort === s.id ? 'bg-brand-600 text-white' : 'text-ink-soft hover:text-brand-700'
               }`}
             >
-              {s.label}
+              {L(s.label, s.labelKk)}
             </button>
           ))}
         </div>
@@ -245,11 +266,11 @@ export function Matches() {
               : 'border-line bg-surface text-ink-soft hover:border-brand-300'
           }`}
         >
-          Только в бюджет
+          {L('Только в бюджет', 'Тек бюджетке сай')}
         </button>
         {compare.length > 0 && (
           <Button variant="secondary" size="sm" onClick={() => navigate('/compare')} className="ml-auto shrink-0 whitespace-nowrap">
-            Сравнить · {compare.length}
+            {L('Сравнить', 'Салыстыру')} · {compare.length}
           </Button>
         )}
       </div>
@@ -260,8 +281,10 @@ export function Matches() {
         <>
           {list.length < 3 && (
             <p className="rounded-xl border border-sun-100 bg-sun-50 px-4 py-3 text-[14px] leading-relaxed text-sun-700">
-              Вариантов меньше трёх. Это честный результат по текущим условиям: чтобы список
-              вырос, добавь страну, подними бюджет или включи готовность к переезду в анкете.
+              {L(
+                'Вариантов меньше трёх. Это честный результат по текущим условиям: чтобы список вырос, добавь страну, подними бюджет или включи готовность к переезду в анкете.',
+                'Нұсқа үштен аз. Бұл — қазіргі шарттар бойынша адал нәтиже: тізім өсуі үшін ел қос, бюджетті көтер немесе сауалнамада көшуге дайындықты қос.',
+              )}
             </p>
           )}
 
@@ -281,7 +304,7 @@ export function Matches() {
 
           {limit < list.length && (
             <Button variant="secondary" full size="lg" onClick={() => setLimit((l) => l + 6)}>
-              Показать ещё {Math.min(6, list.length - limit)}
+              {L('Показать ещё', 'Тағы көрсету')} {Math.min(6, list.length - limit)}
             </Button>
           )}
         </>
@@ -290,29 +313,44 @@ export function Matches() {
       {list.length > 0 && (
         <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <p className="label mb-1.5">Что дальше</p>
+            <p className="label mb-1.5">{L('Что дальше', 'Әрі қарай не')}</p>
             <p className="text-[17px] font-bold leading-snug">
               {compare.length >= 2
-                ? 'Сравни отмеченные варианты по важным для тебя параметрам'
-                : 'Отметь два варианта кнопкой «Сравнить»'}
+                ? L(
+                    'Сравни отмеченные варианты по важным для тебя параметрам',
+                    'Белгіленген нұсқаларды өзіңе маңызды өлшемдер бойынша салыстыр',
+                  )
+                : L('Отметь два варианта кнопкой «Сравнить»', '«Салыстыру» түймесімен екі нұсқаны белгіле')}
             </p>
             <p className="mt-1 text-[14px] text-ink-soft">
-              Дальше соберём план подготовки под твой список.
+              {L('Дальше соберём план подготовки под твой список.', 'Әрі қарай тізіміңе сай дайындық жоспарын құрамыз.')}
             </p>
           </div>
           <div className="flex shrink-0 gap-2">
-            <Button variant="secondary" size="lg" onClick={() => navigate('/compare')}>Сравнение</Button>
-            <Button size="lg" onClick={() => navigate('/roadmap')}>План <span aria-hidden>→</span></Button>
+            <Button variant="secondary" size="lg" onClick={() => navigate('/compare')}>
+              {L('Сравнение', 'Салыстыру')}
+            </Button>
+            <Button size="lg" onClick={() => navigate('/roadmap')}>
+              {L('План', 'Жоспар')} <span aria-hidden>→</span>
+            </Button>
           </div>
         </Card>
       )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone="neutral">
-          Профиль: {countOf(profile.fields.length, 'направление', 'направления', 'направлений')}
+          {L('Профиль', 'Профиль')}:{' '}
+          {L(
+            countOf(profile.fields.length, 'направление', 'направления', 'направлений'),
+            `${profile.fields.length} бағыт`,
+          )}
         </Badge>
-        <Badge tone="neutral">{countOf(profile.countries.length, 'страна', 'страны', 'стран')}</Badge>
-        {saved.length > 0 && <Badge tone="sun">★ {saved.length} в избранном</Badge>}
+        <Badge tone="neutral">
+          {L(countOf(profile.countries.length, 'страна', 'страны', 'стран'), `${profile.countries.length} ел`)}
+        </Badge>
+        {saved.length > 0 && (
+          <Badge tone="sun">★ {saved.length} {L('в избранном', 'таңдаулыда')}</Badge>
+        )}
       </div>
 
       <DemoNote />

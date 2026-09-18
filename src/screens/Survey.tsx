@@ -4,9 +4,9 @@ import { Badge, Button, Card, Chip, DemoNote, Meter } from '../components/ui'
 import { useApp } from '../store/app'
 import { useL } from '../i18n/LangContext'
 import {
-  ACHIEVEMENT_AWARDS, ACHIEVEMENT_KINDS, ACHIEVEMENT_KIND_EMOJI, ACHIEVEMENT_LEVELS,
-  BUDGETS, COUNTRIES, ENGLISH_LEVELS, EXAMS, FIELDS, LANGUAGES, PRIORITIES,
-  SCHOOL_SYSTEMS, STAGES, SUBJECTS, TONES,
+  ACHIEVEMENT_KIND_EMOJI, achievementAwards, achievementKinds, achievementLevels,
+  budgets, countries, englishLevels, exams, fields, languages, priorities,
+  schoolSystems, stages, subjects, tones,
 } from '../data/taxonomy'
 import { achievementLabel, summarizeAchievements } from '../engine/achievements'
 import type {
@@ -155,7 +155,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
 
       <div className="no-scrollbar -mx-1 overflow-x-auto px-1">
         <div className="flex min-w-max gap-1.5 pb-1">
-          {ACHIEVEMENT_KINDS.map((k) => (
+          {achievementKinds().map((k) => (
             <button
               key={k.id}
               type="button"
@@ -193,7 +193,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
             onChange={(e) => setLevel(e.target.value as AchievementLevel)}
             className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3 text-[15px] focus:border-brand-400"
           >
-            {ACHIEVEMENT_LEVELS.map((l) => (
+            {achievementLevels().map((l) => (
               <option key={l.id} value={l.id}>{l.label}</option>
             ))}
           </select>
@@ -205,7 +205,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
             onChange={(e) => setAward(e.target.value as AchievementAward)}
             className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3 text-[15px] focus:border-brand-400"
           >
-            {ACHIEVEMENT_AWARDS.map((a) => (
+            {achievementAwards().map((a) => (
               <option key={a.id} value={a.id}>{a.label}</option>
             ))}
           </select>
@@ -326,7 +326,7 @@ export function Survey() {
             <fieldset>
               <legend className="text-[15px] font-semibold">{L('На каком ты этапе?', 'Қай кезеңдесің?')}</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {STAGES.map((s) => (
+                {stages().map((s) => (
                   <Chip key={s.id} active={draft.stage === s.id} hint={s.hint} onClick={() => patch({ stage: s.id })}>
                     {s.label}
                   </Chip>
@@ -358,7 +358,7 @@ export function Survey() {
 
         {step.id === 'fields' && (
           <div className="grid gap-2 sm:grid-cols-2">
-            {FIELDS.map((f) => (
+            {fields().map((f) => (
               <Chip
                 key={f.id}
                 active={draft.fields.includes(f.id)}
@@ -379,7 +379,7 @@ export function Survey() {
                 {L('От этого зависит, в каких баллах считать успеваемость.', 'Үлгерімді қандай балмен санайтыны осыған байланысты.')}
               </span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {SCHOOL_SYSTEMS.map((s) => (
+                {schoolSystems().map((s) => (
                   <Chip
                     key={s.id}
                     active={draft.schoolSystem === s.id}
@@ -456,13 +456,13 @@ export function Survey() {
                 {L('Отметь те, где стабильно хорошо.', 'Тұрақты жақсы болатындарын белгіле.')}
               </span>
               <div className="mt-2 flex flex-wrap gap-2">
-                {SUBJECTS.map((s) => {
-                  const active = draft.strongSubjects.includes(s)
+                {subjects().map((s) => {
+                  const active = draft.strongSubjects.includes(s.id)
                   return (
                     <button
-                      key={s}
+                      key={s.id}
                       type="button"
-                      onClick={() => patch({ strongSubjects: toggle(draft.strongSubjects, s) })}
+                      onClick={() => patch({ strongSubjects: toggle(draft.strongSubjects, s.id) })}
                       aria-pressed={active}
                       className={`h-10 rounded-full border px-3.5 text-[14px] font-semibold transition-colors ${
                         active
@@ -470,7 +470,7 @@ export function Survey() {
                           : 'border-line bg-surface text-ink-soft hover:border-brand-300'
                       }`}
                     >
-                      {s}
+                      {s.label}
                     </button>
                   )
                 })}
@@ -486,7 +486,7 @@ export function Survey() {
                 {L('Языки обучения, которые тебе подходят', 'Саған қолайлы оқу тілдері')}
               </legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {LANGUAGES.map((l) => (
+                {languages().map((l) => (
                   <Chip
                     key={l.code}
                     active={draft.languages.includes(l.code)}
@@ -504,7 +504,7 @@ export function Survey() {
                 {L('Честная самооценка точнее, чем желаемая.', 'Шынайы өзін-өзі бағалау қалаған деңгейден дәлірек.')}
               </span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {ENGLISH_LEVELS.map((e) => (
+                {englishLevels().map((e) => (
                   <Chip key={e.id} active={draft.english === e.id} hint={e.hint} onClick={() => patch({ english: e.id })}>
                     {e.label}
                   </Chip>
@@ -519,7 +519,7 @@ export function Survey() {
             <fieldset>
               <legend className="text-[15px] font-semibold">{L('Что планируешь сдавать', 'Нені тапсыруды жоспарлайсың')}</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {EXAMS.map((e) => (
+                {exams().map((e) => (
                   <Chip
                     key={e.id}
                     active={draft.exams.planned.includes(e.id)}
@@ -637,11 +637,11 @@ export function Survey() {
         {step.id === 'geo' && (
           <>
             <div className="grid gap-2 sm:grid-cols-2">
-              {COUNTRIES.map((c) => (
+              {countries().map((c) => (
                 <Chip
                   key={c.code}
                   active={draft.countries.includes(c.code)}
-                  hint={c.note}
+                  hint={c.hint}
                   onClick={() => patch({ countries: toggle(draft.countries, c.code) })}
                 >
                   {c.flag} {c.label}
@@ -688,7 +688,7 @@ export function Survey() {
                 {L('Только плата за обучение, без проживания.', 'Тек оқу ақысы, тұрғын үйсіз.')}
               </span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {BUDGETS.map((b) => (
+                {budgets().map((b) => (
                   <Chip key={b.id} active={draft.budget === b.id} hint={b.hint} onClick={() => patch({ budget: b.id })}>
                     {b.label}
                   </Chip>
@@ -700,7 +700,7 @@ export function Survey() {
               <legend className="text-[15px] font-semibold">{L('Что для тебя важнее всего', 'Сен үшін не маңызды')}</legend>
               <span className="mt-0.5 block text-xs text-ink-muted">{L('Можно выбрать несколько.', 'Бірнешеуін таңдауға болады.')}</span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {PRIORITIES.map((p) => (
+                {priorities().map((p) => (
                   <Chip
                     key={p.id}
                     active={draft.priorities.includes(p.id)}
@@ -719,7 +719,7 @@ export function Survey() {
                 {L('Меняет тон подсказок и диагностики, но не сами рекомендации.', 'Кеңестер мен диагностика үнін өзгертеді, ұсыныстарды емес.')}
               </span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {TONES.map((t) => (
+                {tones().map((t) => (
                   <Chip key={t.id} active={draft.tone === t.id} hint={t.hint} onClick={() => patch({ tone: t.id })}>
                     {t.emoji} {t.label}
                   </Chip>

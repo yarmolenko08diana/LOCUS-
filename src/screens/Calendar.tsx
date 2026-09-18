@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { Badge, Card, DemoNote, Empty, SectionTitle } from '../components/ui'
 import { useApp } from '../store/app'
 import { useL } from '../i18n/LangContext'
-import { MONTH_LABEL, whenLabel } from '../engine/calendar'
+import { monthLabel, whenLabel } from '../engine/calendar'
 import type { CalendarEntry } from '../types'
 
 const KIND_META: Record<CalendarEntry['kind'], { emoji: string; tone: 'brand' | 'mint' | 'sun' | 'neutral' }> = {
@@ -69,7 +69,7 @@ export function Calendar() {
         {groups.map((g) => (
           <li key={g.key}>
             <div className="mb-2.5 flex items-baseline gap-2">
-              <h2 className="text-base font-bold capitalize">{MONTH_LABEL[g.month - 1]}</h2>
+              <h2 className="text-base font-bold capitalize">{monthLabel(g.month - 1)}</h2>
               <span className="text-sm tabular-nums text-ink-muted">{g.year}</span>
             </div>
             <ul className="space-y-2.5">

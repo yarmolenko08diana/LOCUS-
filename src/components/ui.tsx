@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { useL } from '../i18n/LangContext'
 
 type Tone = 'brand' | 'mint' | 'coral' | 'sun' | 'neutral'
 
@@ -141,10 +142,16 @@ export function SectionTitle({
 }
 
 export function DemoNote({ children, className = '' }: { children?: ReactNode; className?: string }) {
+  const L = useL()
   return (
     <p className={`flex items-start gap-1.5 text-xs leading-relaxed text-ink-muted ${className}`}>
       <span aria-hidden className="mt-[1px] shrink-0 text-[13px]">ⓘ</span>
-      <span>{children ?? 'Демо-данные прототипа. Сверяйте с официальным сайтом вуза.'}</span>
+      <span>
+        {children ?? L(
+          'Демо-данные прототипа. Сверяйте с официальным сайтом вуза.',
+          'Прототиптің демо-деректері. ЖОО ресми сайтымен тексеріңіз.',
+        )}
+      </span>
     </p>
   )
 }

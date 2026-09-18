@@ -5,6 +5,7 @@ import { effectiveGpa } from './academics'
 import { summarizeAchievements, type AchievementSummary } from './achievements'
 import { effectiveIelts } from './match'
 import { listOf, softLower } from '../lib/text'
+import { L } from '../i18n/lang'
 
 /**
  * Подбор стипендий устроен проще, чем подбор программ: это не рейтинг вузов,
@@ -26,18 +27,27 @@ function scoreScholarship(
     score += 34
     reasons.push({
       tone: 'good',
-      tag: 'Страна',
-      text: `Работает в выбранных тобой странах: ${listOf(countryHit.map((c) => COUNTRY_LABEL[c]))}.`,
+      tag: L('Страна', 'Ел'),
+      text: L(
+        `Работает в выбранных тобой странах: ${listOf(countryHit.map((c) => COUNTRY_LABEL[c]))}.`,
+        `Сен таңдаған елдерде жұмыс істейді: ${listOf(countryHit.map((c) => COUNTRY_LABEL[c]))}.`,
+      ),
     })
   } else if (profile.relocation) {
     score += 14
     reasons.push({
       tone: 'neutral',
-      tag: 'Страна',
-      text: `Эти страны не были в твоём списке, но ты отметил готовность к переезду: ${listOf(s.countries.slice(0, 4).map((c) => COUNTRY_LABEL[c]))}.`,
+      tag: L('Страна', 'Ел'),
+      text: L(
+        `Этих стран не было в твоём списке, но в анкете отмечена готовность к переезду: ${listOf(s.countries.slice(0, 4).map((c) => COUNTRY_LABEL[c]))}.`,
+        `Бұл елдер тізіміңде болмады, бірақ сауалнамада көшуге дайын екенің белгіленген: ${listOf(s.countries.slice(0, 4).map((c) => COUNTRY_LABEL[c]))}.`,
+      ),
     })
   } else {
-    gaps.push('Стипендия не покрывает страны из твоего списка, а переезд в анкете выключен')
+    gaps.push(L(
+      'Стипендия не покрывает страны из твоего списка, а переезд в анкете выключен',
+      'Шәкіртақы тізіміңдегі елдерді қамтымайды, ал сауалнамада көшу өшірілген',
+    ))
   }
 
   // Направление
@@ -47,18 +57,27 @@ function scoreScholarship(
     score += 18
     reasons.push({
       tone: 'good',
-      tag: 'Направление',
-      text: `Рассчитана как раз на твои интересы: ${listOf(s.fields.filter((f) => profile.fields.includes(f)).map((f) => softLower(FIELD_LABEL[f])))}.`,
+      tag: L('Направление', 'Бағыт'),
+      text: L(
+        `Рассчитана как раз на твои интересы: ${listOf(s.fields.filter((f) => profile.fields.includes(f)).map((f) => softLower(FIELD_LABEL[f])))}.`,
+        `Дәл сенің қызығушылықтарыңа арналған: ${listOf(s.fields.filter((f) => profile.fields.includes(f)).map((f) => softLower(FIELD_LABEL[f])))}.`,
+      ),
     })
   } else {
-    gaps.push(`Направления не совпадают: стипендия для ${listOf(s.fields.map((f) => softLower(FIELD_LABEL[f])))}`)
+    gaps.push(L(
+      `Направления не совпадают: стипендия для ${listOf(s.fields.map((f) => softLower(FIELD_LABEL[f])))}`,
+      `Бағыттар сәйкес келмейді: шәкіртақы ${listOf(s.fields.map((f) => softLower(FIELD_LABEL[f])))} үшін`,
+    ))
   }
 
   // Этап обучения
   if (s.stages.includes(profile.stage)) {
     score += 12
   } else {
-    gaps.push('На твоём этапе обучения подать на эту стипендию ещё нельзя')
+    gaps.push(L(
+      'На твоём этапе обучения подать на эту стипендию ещё нельзя',
+      'Оқу кезеңіңде бұл шәкіртақыға әлі өтінім беруге болмайды',
+    ))
   }
 
   // Успеваемость
@@ -68,12 +87,18 @@ function scoreScholarship(
       score += 14
       reasons.push({
         tone: 'good',
-        tag: 'Успеваемость',
-        text: `Твой балл ${gpa.toFixed(1)} закрывает ориентир ${s.requirements.gpa.toFixed(1)}.`,
+        tag: L('Успеваемость', 'Үлгерім'),
+        text: L(
+          `Твой балл ${gpa.toFixed(1)} закрывает ориентир ${s.requirements.gpa.toFixed(1)}.`,
+          `Балың ${gpa.toFixed(1)} — бағдар ${s.requirements.gpa.toFixed(1)} жабылды.`,
+        ),
       })
     } else {
       score += 4
-      gaps.push(`Средний балл: твой ${gpa.toFixed(1)}, ориентир ${s.requirements.gpa.toFixed(1)}`)
+      gaps.push(L(
+        `Средний балл: твой ${gpa.toFixed(1)}, ориентир ${s.requirements.gpa.toFixed(1)}`,
+        `Орташа балл: сенікі ${gpa.toFixed(1)}, бағдар ${s.requirements.gpa.toFixed(1)}`,
+      ))
     }
   } else {
     score += 8
@@ -86,7 +111,10 @@ function scoreScholarship(
       score += 10
     } else {
       score += 3
-      gaps.push(`Английский: ориентир IELTS ${s.requirements.ielts}, оценка твоего уровня — ${ielts.toFixed(1)}`)
+      gaps.push(L(
+        `Английский: ориентир IELTS ${s.requirements.ielts}, оценка твоего уровня — ${ielts.toFixed(1)}`,
+        `Ағылшын тілі: бағдар IELTS ${s.requirements.ielts}, сенің деңгейің шамамен ${ielts.toFixed(1)}`,
+      ))
     }
   } else {
     score += 6
@@ -98,14 +126,23 @@ function scoreScholarship(
       score += 12
       reasons.push({
         tone: 'good',
-        tag: 'ЕНТ',
-        text: `${profile.exams.ent} баллов при ориентире ${s.requirements.ent}.`,
+        tag: L('ЕНТ', 'ҰБТ'),
+        text: L(
+          `${profile.exams.ent} баллов при ориентире ${s.requirements.ent}.`,
+          `Бағдар ${s.requirements.ent} кезінде ${profile.exams.ent} балл.`,
+        ),
       })
     } else if (profile.exams.planned.includes('ent')) {
       score += 7
-      gaps.push(`ЕНТ ещё не сдан, ориентир ${s.requirements.ent} баллов`)
+      gaps.push(L(
+        `ЕНТ ещё не сдан, ориентир ${s.requirements.ent} баллов`,
+        `ҰБТ әлі тапсырылмаған, бағдар — ${s.requirements.ent} балл`,
+      ))
     } else {
-      gaps.push('Без ЕНТ на эту стипендию подать нельзя')
+      gaps.push(L(
+        'Без ЕНТ на эту стипендию подать нельзя',
+        'ҰБТ-сыз бұл шәкіртақыға өтінім беру мүмкін емес',
+      ))
     }
   } else {
     score += 6
@@ -117,15 +154,24 @@ function scoreScholarship(
       score += 12
       reasons.push({
         tone: 'good',
-        tag: 'Достижения',
-        text: 'Здесь смотрят на олимпиады, проекты и активности — твой профиль для этого достаточно сильный.',
+        tag: L('Достижения', 'Жетістіктер'),
+        text: L(
+          'Здесь смотрят на олимпиады, проекты и активности — твой профиль для этого достаточно сильный.',
+          'Мұнда олимпиада, жоба және белсенділікке қарайды — профилің ол үшін жеткілікті күшті.',
+        ),
       })
     } else {
       score += 3
       gaps.push(
         ach.count === 0
-          ? 'Нужны достижения: олимпиады, проекты или конкурсы, в анкете их пока нет'
-          : 'Профиль достижений пока слабее, чем обычно требуется для этой стипендии',
+          ? L(
+              'Нужны достижения: олимпиады, проекты или конкурсы, в анкете их пока нет',
+              'Жетістіктер керек: олимпиада, жоба немесе конкурс, сауалнамада олар әзірге жоқ',
+            )
+          : L(
+              'Профиль достижений пока слабее, чем обычно требуется для этой стипендии',
+              'Жетістік профилі әзірге бұл шәкіртақыға әдетте қажет деңгейден әлсіз',
+            ),
       )
     }
   } else {

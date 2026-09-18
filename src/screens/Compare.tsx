@@ -1,14 +1,17 @@
 import { useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, DemoNote, Empty } from '../components/ui'
-import { CHANCE_META, money, tuitionLabel } from '../components/ProgramCard'
+import { CHANCE_META, chanceLabel, money, tuitionLabel } from '../components/ProgramCard'
 import { useApp } from '../store/app'
 import { COUNTRY_FLAG, COUNTRY_LABEL, LANGUAGE_LABEL, PRIORITY_LABEL } from '../data/taxonomy'
+import { useL } from '../i18n/LangContext'
+import { L } from '../i18n/lang'
 import { countOf } from '../lib/text'
 import type { Recommendation } from '../types'
 
 interface Row {
   label: string
+  labelKk: string
   render: (r: Recommendation) => React.ReactNode
   /** Кто выигрывает по этой строке; undefined — сравнение не имеет смысла. */
   best?: (list: Recommendation[]) => string | undefined
@@ -16,57 +19,85 @@ interface Row {
 
 const ROWS: Row[] = [
   {
-    label: 'Совпадение с профилем',
+    label: 'Совпадение с профилем', labelKk: 'Профильмен сәйкестік',
     render: (r) => <span className="text-[19px] font-extrabold tabular-nums text-brand-600">{r.score}%</span>,
     best: (l) => [...l].sort((a, b) => b.score - a.score)[0].program.id,
   },
   {
-    label: 'Ориентировочные шансы',
-    render: (r) => <Badge tone={CHANCE_META[r.chance.level].tone}>{CHANCE_META[r.chance.level].label}</Badge>,
+    label: 'Ориентировочные шансы', labelKk: 'Болжамды мүмкіндік',
+    render: (r) => <Badge tone={CHANCE_META[r.chance.level].tone}>{chanceLabel(r.chance.level)}</Badge>,
   },
-  { label: 'Страна и город', render: (r) => `${COUNTRY_FLAG[r.program.country]} ${COUNTRY_LABEL[r.program.country]}, ${r.program.city}` },
   {
-    label: 'Стоимость обучения',
+    label: 'Страна и город', labelKk: 'Ел және қала',
+    render: (r) => `${COUNTRY_FLAG[r.program.country]} ${COUNTRY_LABEL[r.program.country]}, ${r.program.city}`,
+  },
+  {
+    label: 'Стоимость обучения', labelKk: 'Оқу құны',
     render: (r) => tuitionLabel(r),
     best: (l) => [...l].sort((a, b) => a.program.tuitionUsd[0] - b.program.tuitionUsd[0])[0].program.id,
   },
   {
-    label: 'Год с проживанием',
+    label: 'Год с проживанием', labelKk: 'Тұрғын үймен бір жыл',
     render: (r) => `≈ ${money(r.yearlyCostUsd)}`,
     best: (l) => [...l].sort((a, b) => a.yearlyCostUsd - b.yearlyCostUsd)[0].program.id,
   },
-  { label: 'Грант или стипендия', render: (r) => (r.program.grant.available ? r.program.grant.note : 'Не предусмотрено для международных студентов') },
-  { label: 'Язык обучения', render: (r) => r.program.languages.map((l) => LANGUAGE_LABEL[l]).join(', ') },
-  { label: 'Длительность', render: (r) => `${r.program.durationYears} года` },
   {
-    label: 'Что нужно для поступления',
+    label: 'Грант или стипендия', labelKk: 'Грант немесе шәкіртақы',
+    render: (r) =>
+      r.program.grant.available
+        ? r.program.grant.note
+        : L('Не предусмотрено для международных студентов', 'Шетелдік студенттерге қарастырылмаған'),
+  },
+  {
+    label: 'Язык обучения', labelKk: 'Оқу тілі',
+    render: (r) => r.program.languages.map((l) => LANGUAGE_LABEL[l]).join(', '),
+  },
+  {
+    label: 'Длительность', labelKk: 'Ұзақтығы',
+    render: (r) => `${r.program.durationYears} ${L('года', 'жыл')}`,
+  },
+  {
+    label: 'Что нужно для поступления', labelKk: 'Түсу үшін не қажет',
     render: (r) => {
       const req = r.program.requirements
       const parts = [
-        req.ent !== undefined ? `ЕНТ от ${req.ent}` : null,
+        req.ent !== undefined ? `${L('ЕНТ от', 'ҰБТ')} ${req.ent}` : null,
         req.ielts !== undefined ? `IELTS ${req.ielts}` : null,
+        req.toefl !== undefined ? `TOEFL ${req.toefl}` : null,
         req.sat !== undefined ? `SAT ${req.sat}` : null,
-        req.gpa !== undefined ? `средний балл ${req.gpa.toFixed(1)}` : null,
-        req.portfolio ? 'портфолио' : null,
+        req.ib !== undefined ? `IB ${req.ib}` : null,
+        req.gpa !== undefined ? `${L('средний балл', 'орташа бал')} ${req.gpa.toFixed(1)}` : null,
+        req.portfolio ? L('портфолио', 'портфолио') : null,
         req.entranceExam ?? null,
       ].filter(Boolean)
-      return parts.length ? parts.join(', ') : 'уточняется на сайте вуза'
+      return parts.length ? parts.join(', ') : L('уточняется на сайте вуза', 'ЖОО сайтында нақтыланады')
     },
   },
-  { label: 'Ближайший период подачи', render: (r) => `${r.program.deadlines[0].label}: ${r.program.deadlines[0].window}` },
   {
-    label: 'Трудоустройство',
+    label: 'Ближайший период подачи', labelKk: 'Ең жақын өтінім кезеңі',
+    render: (r) => `${r.program.deadlines[0].label}: ${r.program.deadlines[0].window}`,
+  },
+  {
+    label: 'Насколько смотрят на портфолио', labelKk: 'Портфолиоға қаншалық қарайды',
+    render: (r) => '●'.repeat(r.program.holistic) + '○'.repeat(5 - r.program.holistic),
+    best: (l) => [...l].sort((a, b) => b.program.holistic - a.program.holistic)[0].program.id,
+  },
+  {
+    label: 'Трудоустройство', labelKk: 'Жұмысқа орналасу',
     render: (r) => '★'.repeat(r.program.employability) + '☆'.repeat(5 - r.program.employability),
     best: (l) => [...l].sort((a, b) => b.program.employability - a.program.employability)[0].program.id,
   },
   {
-    label: 'Репутация вуза',
+    label: 'Репутация вуза', labelKk: 'ЖОО беделі',
     render: (r) => '★'.repeat(r.program.prestige) + '☆'.repeat(5 - r.program.prestige),
     best: (l) => [...l].sort((a, b) => b.program.prestige - a.program.prestige)[0].program.id,
   },
   {
-    label: 'Главное «но»',
-    render: (r) => (r.watchouts.length ? r.watchouts[0].text : 'Явных препятствий по твоему профилю нет'),
+    label: 'Главное «но»', labelKk: 'Басты «бірақ»',
+    render: (r) =>
+      r.watchouts.length
+        ? r.watchouts[0].text
+        : L('Явных препятствий по твоему профилю нет', 'Профилің бойынша айқын кедергі жоқ'),
   },
 ]
 
@@ -80,22 +111,41 @@ function verdict(list: Recommendation[], priorities: string[]): { winner: Recomm
   )[0]
 
   const bits: string[] = [
-    `По совокупности критериев ближе всего ${winner.program.universityShort} — ${winner.score}% совпадения.`,
+    L(
+      `По совокупности критериев ближе всего ${winner.program.universityShort} — ${winner.score}% совпадения.`,
+      `Өлшемдер жиынтығы бойынша ең жақыны — ${winner.program.universityShort}, ${winner.score}% сәйкестік.`,
+    ),
   ]
   if (cheapest.program.id !== winner.program.id) {
-    bits.push(`Дешевле выходит ${cheapest.program.universityShort}: около ${money(cheapest.yearlyCostUsd)} за год против ${money(winner.yearlyCostUsd)}.`)
+    bits.push(
+      L(
+        `Дешевле выходит ${cheapest.program.universityShort}: около ${money(cheapest.yearlyCostUsd)} за год против ${money(winner.yearlyCostUsd)}.`,
+        `Арзанырағы — ${cheapest.program.universityShort}: жылына шамамен ${money(cheapest.yearlyCostUsd)}, ал ${money(winner.yearlyCostUsd)} емес.`,
+      ),
+    )
   }
   if (safest.program.id !== winner.program.id && safest.chance.level !== winner.chance.level) {
-    bits.push(`Надёжнее по проходимости ${safest.program.universityShort}.`)
+    bits.push(
+      L(
+        `Надёжнее по проходимости ${safest.program.universityShort}.`,
+        `Өту мүмкіндігі бойынша сенімдірегі — ${safest.program.universityShort}.`,
+      ),
+    )
   }
   if (priorities.length) {
-    bits.push(`Как важное отмечено: ${priorities.join(', ').toLowerCase()} — смотри на эти строки в первую очередь.`)
+    bits.push(
+      L(
+        `Как важное отмечено: ${priorities.join(', ').toLowerCase()} — смотри на эти строки в первую очередь.`,
+        `Маңызды деп белгіленді: ${priorities.join(', ').toLowerCase()} — ең алдымен осы жолдарға қара.`,
+      ),
+    )
   }
   return { winner, text: bits.join(' ') }
 }
 
 export function Compare() {
   const { recommendations, compare, toggleCompare, completed, profile } = useApp()
+  const Lc = useL()
   const navigate = useNavigate()
 
   const list = useMemo(
@@ -104,15 +154,21 @@ export function Compare() {
   )
   const conclusion = useMemo(
     () => verdict(list, profile.priorities.map((p) => PRIORITY_LABEL[p])),
-    [list, profile.priorities],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [list, profile.priorities, Lc],
   )
 
   if (!completed) {
     return (
       <Empty
-        title="Сравнение появится после анкеты"
-        description="Сначала нужен профиль, чтобы было что с чем сравнивать."
-        action={<Button onClick={() => navigate('/survey')}>Заполнить анкету</Button>}
+        title={Lc('Сравнение появится после анкеты', 'Салыстыру сауалнамадан кейін пайда болады')}
+        description={Lc(
+          'Сначала нужен профиль, чтобы было что с чем сравнивать.',
+          'Салыстыратын нәрсе болу үшін алдымен профиль керек.',
+        )}
+        action={
+          <Button onClick={() => navigate('/survey')}>{Lc('Заполнить анкету', 'Сауалнаманы толтыру')}</Button>
+        }
       />
     )
   }
@@ -122,14 +178,20 @@ export function Compare() {
     return (
       <div className="animate-fade-up space-y-6">
         <header>
-          <p className="label mb-2">Шаг 4 · Сравнение</p>
+          <p className="label mb-2">{Lc('Шаг 4 · Сравнение', '4-қадам · Салыстыру')}</p>
           <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] sm:text-4xl">
-            Выбери минимум два варианта
+            {Lc('Выбери минимум два варианта', 'Кемінде екі нұсқа таңда')}
           </h1>
           <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-ink-soft">
             {list.length === 1
-              ? 'Один вариант уже отмечен. Добавь второй, и мы разложим их по стоимости, требованиям и шансам.'
-              : 'Отметь варианты здесь или кнопкой «Сравнить» на карточках в подборе.'}
+              ? Lc(
+                  'Один вариант уже отмечен. Добавь второй, и мы разложим их по стоимости, требованиям и шансам.',
+                  'Бір нұсқа белгіленген. Екіншісін қос, сонда оларды құны, талаптары және мүмкіндігі бойынша жіктейміз.',
+                )
+              : Lc(
+                  'Отметь варианты здесь или кнопкой «Сравнить» на карточках в подборе.',
+                  'Нұсқаларды осында немесе таңдаудағы карточкалардың «Салыстыру» түймесімен белгіле.',
+                )}
           </p>
         </header>
 
@@ -146,7 +208,7 @@ export function Compare() {
                 <span className="min-w-0">
                   <span className="block truncate text-[15px] font-bold">{r.program.program}</span>
                   <span className="block truncate text-[13px] text-ink-muted">
-                    {r.program.university} · {r.score}% совпадения
+                    {r.program.university} · {r.score}% {Lc('совпадения', 'сәйкестік')}
                   </span>
                 </span>
                 <span
@@ -154,7 +216,7 @@ export function Compare() {
                     active ? 'border-brand-500 bg-brand-50 text-brand-700' : 'border-line text-ink-soft'
                   }`}
                 >
-                  {active ? 'Выбрано ✓' : 'Добавить'}
+                  {active ? Lc('Выбрано ✓', 'Таңдалды ✓') : Lc('Добавить', 'Қосу')}
                 </span>
               </button>
             )
@@ -162,7 +224,7 @@ export function Compare() {
         </Card>
 
         <Button variant="secondary" full size="lg" onClick={() => navigate('/matches')}>
-          Вернуться к подбору
+          {Lc('Вернуться к подбору', 'Таңдауға оралу')}
         </Button>
       </div>
     )
@@ -171,18 +233,23 @@ export function Compare() {
   return (
     <div className="animate-fade-up space-y-6">
       <header>
-        <p className="label mb-2">Шаг 4 · Сравнение</p>
+        <p className="label mb-2">{Lc('Шаг 4 · Сравнение', '4-қадам · Салыстыру')}</p>
         <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] sm:text-4xl">
-          {countOf(list.length, 'вариант', 'варианта', 'вариантов')} рядом
+          {Lc(`${countOf(list.length, 'вариант', 'варианта', 'вариантов')} рядом`, `${list.length} нұсқа қатар`)}
         </h1>
         <p className="mt-2 max-w-2xl text-[16px] leading-relaxed text-ink-soft">
-          Зелёной точкой отмечено, где вариант выигрывает по строке.
+          {Lc(
+            'Зелёной точкой отмечено, где вариант выигрывает по строке.',
+            'Жасыл нүкте нұсқаның сол жол бойынша ұтатынын білдіреді.',
+          )}
         </p>
       </header>
 
       {conclusion && (
         <Card className="bg-brand-900 p-6 text-white">
-          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-300">Короткий вывод</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-300">
+            {Lc('Короткий вывод', 'Қысқаша қорытынды')}
+          </p>
           <p className="mt-2 text-[16px] leading-relaxed">{conclusion.text}</p>
         </Card>
       )}
@@ -192,7 +259,7 @@ export function Compare() {
           <thead>
             <tr>
               <th scope="col" className="sticky left-0 z-10 w-40 bg-paper px-3 pb-3 text-left align-bottom">
-                <span className="label">Параметр</span>
+                <span className="label">{Lc('Параметр', 'Өлшем')}</span>
               </th>
               {list.map((r) => (
                 <th key={r.program.id} scope="col" className="px-3 pb-3 text-left align-bottom">
@@ -205,7 +272,7 @@ export function Compare() {
                     onClick={() => toggleCompare(r.program.id)}
                     className="mt-2 text-[12px] font-bold text-coral-600 hover:underline"
                   >
-                    Убрать
+                    {Lc('Убрать', 'Алып тастау')}
                   </button>
                 </th>
               ))}
@@ -222,13 +289,13 @@ export function Compare() {
                       i % 2 === 0 ? 'bg-surface' : 'bg-paper'
                     }`}
                   >
-                    {row.label}
+                    {Lc(row.label, row.labelKk)}
                   </th>
                   {list.map((r) => (
                     <td key={r.program.id} className="border-t border-line px-3 py-3 align-top text-[14px] leading-relaxed text-ink-soft">
                       <span className="flex items-start gap-1.5">
                         {bestId === r.program.id && (
-                          <span aria-label="лучший по этой строке" className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-mint-500" />
+                          <span aria-label={Lc('лучший по этой строке', 'осы жол бойынша үздік')} className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-mint-500" />
                         )}
                         <span className="min-w-0">{row.render(r)}</span>
                       </span>
@@ -243,14 +310,19 @@ export function Compare() {
 
       <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
-          <p className="label mb-1.5">Что дальше</p>
-          <p className="text-[17px] font-bold leading-snug">Собрать план подготовки</p>
+          <p className="label mb-1.5">{Lc('Что дальше', 'Әрі қарай не')}</p>
+          <p className="text-[17px] font-bold leading-snug">
+            {Lc('Собрать план подготовки', 'Дайындық жоспарын құру')}
+          </p>
           <p className="mt-1 text-[14px] text-ink-soft">
-            План строится под требования программ из твоего топа, включая эти.
+            {Lc(
+              'План строится под требования программ из твоего топа, включая эти.',
+              'Жоспар топ бағдарламаларыңның талаптарына, оның ішінде осыларға да сай құрылады.',
+            )}
           </p>
         </div>
         <Button size="lg" onClick={() => navigate('/roadmap')} className="shrink-0">
-          К плану <span aria-hidden>→</span>
+          {Lc('К плану', 'Жоспарға')} <span aria-hidden>→</span>
         </Button>
       </Card>
 

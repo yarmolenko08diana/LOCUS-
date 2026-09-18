@@ -1,12 +1,21 @@
 import type { CalendarEntry, Profile, Recommendation, ScholarshipMatch } from '../types'
 import { COUNTRY_LABEL } from '../data/taxonomy'
+import { L } from '../i18n/lang'
 
-const MONTHS = [
+const MONTHS_RU = [
   'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
   'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь',
 ]
 
-export const MONTH_LABEL = MONTHS
+const MONTHS_KK = [
+  'қаңтар', 'ақпан', 'наурыз', 'сәуір', 'мамыр', 'маусым',
+  'шілде', 'тамыз', 'қыркүйек', 'қазан', 'қараша', 'желтоқсан',
+]
+
+/** Названия месяцев читаются при отрисовке, поэтому следуют за языком интерфейса. */
+export function monthLabel(index: number): string {
+  return L(MONTHS_RU[index], MONTHS_KK[index])
+}
 
 /**
  * Календарь собирается из периодов подачи выбранных программ и стипендий.
@@ -47,7 +56,9 @@ export function buildCalendar(
     entries.push({
       id: `sch-${m.scholarship.id}`,
       title: m.scholarship.name,
-      subtitle: m.eligible ? 'подходит по анкете' : 'есть незакрытые требования',
+      subtitle: m.eligible
+        ? L('подходит по анкете', 'сауалнама бойынша келеді')
+        : L('есть незакрытые требования', 'жабылмаған талаптар бар'),
       kind: 'scholarship',
       window: m.scholarship.window,
       month: m.scholarship.startMonth,
@@ -61,10 +72,10 @@ export function buildCalendar(
   if (profile.exams.planned.includes('ent')) {
     entries.push({
       id: 'exam-ent',
-      title: 'ЕНТ',
-      subtitle: 'основной и дополнительный потоки',
+      title: L('ЕНТ', 'ҰБТ'),
+      subtitle: L('основной и дополнительный потоки', 'негізгі және қосымша ағындар'),
       kind: 'exam',
-      window: 'март и июнь',
+      window: L('март и июнь', 'наурыз және маусым'),
       month: 3,
       endMonth: 6,
       year: yearFor(3, currentMonth, currentYear),
@@ -75,25 +86,25 @@ export function buildCalendar(
     entries.push({
       id: 'exam-ielts',
       title: 'IELTS',
-      subtitle: 'сессии проходят почти каждый месяц',
+      subtitle: L('сессии проходят почти каждый месяц', 'сессиялар дерлік ай сайын өтеді'),
       kind: 'exam',
-      window: 'выбрать дату за 2–3 месяца',
+      window: L('выбрать дату за 2–3 месяца', 'күнді 2–3 ай бұрын таңдау'),
       month: currentMonth,
       year: currentYear,
-      source: { label: 'ielts.org — даты', url: 'https://www.ielts.org/for-test-takers/book-a-test' },
+      source: { label: L('ielts.org — даты', 'ielts.org — күндер'), url: 'https://www.ielts.org/for-test-takers/book-a-test' },
     })
   }
   if (profile.exams.planned.includes('sat') && profile.exams.sat === undefined) {
     entries.push({
       id: 'exam-sat',
       title: 'SAT',
-      subtitle: 'регистрация закрывается за месяц',
+      subtitle: L('регистрация закрывается за месяц', 'тіркеу бір ай бұрын жабылады'),
       kind: 'exam',
-      window: 'март, май, октябрь, декабрь',
+      window: L('март, май, октябрь, декабрь', 'наурыз, мамыр, қазан, желтоқсан'),
       month: 3,
       endMonth: 12,
       year: yearFor(3, currentMonth, currentYear),
-      source: { label: 'collegeboard.org — даты SAT', url: 'https://satsuite.collegeboard.org/sat/registration' },
+      source: { label: L('collegeboard.org — даты SAT', 'collegeboard.org — SAT күндері'), url: 'https://satsuite.collegeboard.org/sat/registration' },
     })
   }
 
@@ -127,9 +138,9 @@ export function whenLabel(entry: CalendarEntry, now = new Date()): string {
       ? currentMonth >= entry.month && currentMonth <= until
       : currentMonth >= entry.month || currentMonth <= until)
 
-  if (spansNow) return 'идёт сейчас'
-  if (diff <= 0) return 'скоро'
-  if (diff === 1) return 'через месяц'
-  if (diff < 5) return `через ${diff} месяца`
-  return `через ${diff} месяцев`
+  if (spansNow) return L('идёт сейчас', 'қазір жүріп жатыр')
+  if (diff <= 0) return L('скоро', 'жақында')
+  if (diff === 1) return L('через месяц', 'бір айдан кейін')
+  if (diff < 5) return L(`через ${diff} месяца`, `${diff} айдан кейін`)
+  return L(`через ${diff} месяцев`, `${diff} айдан кейін`)
 }

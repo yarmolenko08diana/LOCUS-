@@ -1,4 +1,5 @@
 /** Русское склонение числительных: plural(2, 'программа', 'программы', 'программ'). */
+import { L } from '../i18n/lang'
 export function plural(n: number, one: string, few: string, many: string): string {
   const mod100 = Math.abs(n) % 100
   const mod10 = mod100 % 10
@@ -12,12 +13,12 @@ export function countOf(n: number, one: string, few: string, many: string): stri
   return `${n} ${plural(n, one, few, many)}`
 }
 
-/** Перечисление с союзом «и» вместо последней запятой. */
+/** Перечисление с союзом «и» («және» в казахском) вместо последней запятой. */
 export function listOf(items: string[], max = 3): string {
   const cut = items.slice(0, max)
   if (cut.length === 0) return ''
   if (cut.length === 1) return cut[0]
-  return cut.slice(0, -1).join(', ') + ' и ' + cut[cut.length - 1]
+  return cut.slice(0, -1).join(', ') + L(' и ', ' және ') + cut[cut.length - 1]
 }
 
 /** Строчная первая буква, но только если слово не начинается с заглавной аббревиатуры. */

@@ -4,6 +4,7 @@ import {
   ACHIEVEMENT_LEVEL_LABEL, ACHIEVEMENT_LEVEL_WEIGHT, FIELD_ACHIEVEMENTS,
 } from '../data/taxonomy'
 import { plural } from '../lib/text'
+import { L } from '../i18n/lang'
 
 /** Свод по достижениям: что уже есть, насколько это сильно и чего не хватает. */
 export interface AchievementSummary {
@@ -33,7 +34,10 @@ export function achievementValue(a: Achievement, currentYear: number): number {
 
 /** Человекочитаемое описание достижения: «Республиканская олимпиада, 1 место». */
 export function achievementLabel(a: Achievement): string {
-  return `${ACHIEVEMENT_LEVEL_LABEL[a.level]} уровень · ${ACHIEVEMENT_KIND_LABEL[a.kind]} · ${ACHIEVEMENT_AWARD_LABEL[a.award]}`
+  return L(
+    `${ACHIEVEMENT_LEVEL_LABEL[a.level]} уровень · ${ACHIEVEMENT_KIND_LABEL[a.kind]} · ${ACHIEVEMENT_AWARD_LABEL[a.award]}`,
+    `${ACHIEVEMENT_LEVEL_LABEL[a.level]} деңгей · ${ACHIEVEMENT_KIND_LABEL[a.kind]} · ${ACHIEVEMENT_AWARD_LABEL[a.award]}`,
+  )
 }
 
 /**
@@ -97,11 +101,17 @@ function buildHighlights(list: Achievement[], hours: number): string[] {
   const international = list.filter((a) => a.level === 'international' || a.level === 'national')
   if (international.length > 1) {
     out.push(
-      `${international.length} ${plural(international.length, 'достижение', 'достижения', 'достижений')} республиканского или международного уровня`,
+      L(
+        `${international.length} ${plural(international.length, 'достижение', 'достижения', 'достижений')} республиканского или международного уровня`,
+        `республикалық немесе халықаралық деңгейдегі ${international.length} жетістік`,
+      ),
     )
   }
   if (hours >= 50) {
-    out.push(`${hours} ${plural(hours, 'час', 'часа', 'часов')} волонтёрства и практики`)
+    out.push(L(
+      `${hours} ${plural(hours, 'час', 'часа', 'часов')} волонтёрства и практики`,
+      `${hours} сағат волонтёрлік пен тәжірибе`,
+    ))
   }
   return out.slice(0, 3)
 }

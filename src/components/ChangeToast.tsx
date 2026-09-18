@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useApp } from '../store/app'
+import { useL } from '../i18n/LangContext'
 
 /**
  * Обратная связь на изменение анкеты. Требование кейса — после смены ключевого
@@ -8,6 +9,7 @@ import { useApp } from '../store/app'
  */
 export function ChangeToast() {
   const { changeNote, dismissChange } = useApp()
+  const L = useL()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -40,14 +42,14 @@ export function ChangeToast() {
                 onClick={() => { dismissChange(); navigate('/matches') }}
                 className="rounded-lg bg-white px-3 py-1.5 text-[13px] font-bold text-brand-900"
               >
-                Посмотреть подбор
+                {L('Посмотреть подбор', 'Таңдауды қарау')}
               </button>
               <button
                 type="button"
                 onClick={dismissChange}
                 className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-brand-200 hover:text-white"
               >
-                Скрыть
+                {L('Скрыть', 'Жасыру')}
               </button>
             </div>
           </div>
