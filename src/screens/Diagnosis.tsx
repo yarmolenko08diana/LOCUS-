@@ -89,23 +89,23 @@ export function Diagnosis() {
         <Summary profile={profile} diagnosis={diagnosis} />
       </header>
 
-      <Card className="bg-brand-900 p-6 text-white sm:p-7">
-        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-300">
+      <Card className="bg-deep p-6 text-deep-ink sm:p-7">
+        <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-deep-muted">
           {L('Образовательная цель', 'Білім беру мақсаты')}
         </p>
         <p className="mt-2 text-[19px] font-bold leading-snug sm:text-[22px]">{diagnosis.goal}</p>
         <div className="mt-5 flex flex-wrap gap-2">
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">{STAGE_LABEL[profile.stage]}</span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">
+          <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">{STAGE_LABEL[profile.stage]}</span>
+          <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">
             {SCHOOL_SYSTEM_LABEL[profile.schoolSystem]}
           </span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">
+          <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">
             {L('Средний балл', 'Орташа бал')} {gpa.toFixed(1)}
           </span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">
+          <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">
             {L('Английский', 'Ағылшын тілі')} {english.label}
           </span>
-          <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">
+          <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">
             {BUDGET_LABEL[profile.budget]}
           </span>
         </div>

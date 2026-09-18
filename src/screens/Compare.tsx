@@ -246,8 +246,8 @@ export function Compare() {
       </header>
 
       {conclusion && (
-        <Card className="bg-brand-900 p-6 text-white">
-          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-brand-300">
+        <Card className="bg-deep p-6 text-deep-ink">
+          <p className="text-[11px] font-bold uppercase tracking-[0.1em] text-deep-muted">
             {Lc('Короткий вывод', 'Қысқаша қорытынды')}
           </p>
           <p className="mt-2 text-[16px] leading-relaxed">{conclusion.text}</p>

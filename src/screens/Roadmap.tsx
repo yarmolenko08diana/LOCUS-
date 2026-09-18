@@ -9,16 +9,16 @@ import { countOf } from '../lib/text'
 
 const CATEGORY: Record<
   TaskCategory,
-  { label: string; labelKk: string; icon: string; tone: 'brand' | 'mint' | 'sun' | 'coral' | 'neutral' }
+  { label: string; labelKk: string; tone: 'brand' | 'mint' | 'sun' | 'coral' | 'neutral' }
 > = {
-  exam: { label: 'Экзамен', labelKk: 'Емтихан', icon: '📝', tone: 'brand' },
-  document: { label: 'Документы', labelKk: 'Құжаттар', icon: '📄', tone: 'sun' },
-  academic: { label: 'Учёба', labelKk: 'Оқу', icon: '📚', tone: 'mint' },
-  activity: { label: 'Активности', labelKk: 'Белсенділік', icon: '🚀', tone: 'coral' },
-  essay: { label: 'Эссе', labelKk: 'Эссе', icon: '✍️', tone: 'brand' },
-  contest: { label: 'Конкурсы', labelKk: 'Байқаулар', icon: '🏆', tone: 'sun' },
-  scholarship: { label: 'Стипендии', labelKk: 'Шәкіртақылар', icon: '💰', tone: 'mint' },
-  research: { label: 'Разобраться', labelKk: 'Анықтау', icon: '🔎', tone: 'neutral' },
+  exam: { label: 'Экзамен', labelKk: 'Емтихан', tone: 'brand' },
+  document: { label: 'Документы', labelKk: 'Құжаттар', tone: 'sun' },
+  academic: { label: 'Учёба', labelKk: 'Оқу', tone: 'mint' },
+  activity: { label: 'Активности', labelKk: 'Белсенділік', tone: 'coral' },
+  essay: { label: 'Эссе', labelKk: 'Эссе', tone: 'brand' },
+  contest: { label: 'Конкурсы', labelKk: 'Байқаулар', tone: 'sun' },
+  scholarship: { label: 'Стипендии', labelKk: 'Шәкіртақылар', tone: 'mint' },
+  research: { label: 'Разобраться', labelKk: 'Анықтау', tone: 'neutral' },
 }
 
 function TaskRow({
@@ -63,7 +63,7 @@ function TaskRow({
 
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
-          <Badge tone={meta.tone}>{meta.icon} {L(meta.label, meta.labelKk)}</Badge>
+          <Badge tone={meta.tone}>{L(meta.label, meta.labelKk)}</Badge>
           <span className="text-[12px] font-semibold text-ink-muted">{task.window}</span>
           {isNext && !done && <Badge tone="brand">{L('следующий шаг', 'келесі қадам')}</Badge>}
         </div>
@@ -155,19 +155,18 @@ export function Roadmap() {
 
       {next ? (
         <Card className="overflow-hidden border-brand-200">
-          <div className="bg-brand-900 px-6 py-5 text-white">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-300">
-              {nudge(profile.tone)}
+          <div className="bg-deep px-6 py-5 text-deep-ink">
+            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-deep-muted">
+              {nudge()}
             </p>
             <h2 className="mt-2 text-[21px] font-extrabold leading-snug sm:text-[24px]">{next.title}</h2>
-            <p className="mt-2.5 text-[15px] leading-relaxed text-brand-100">{next.why}</p>
+            <p className="mt-2.5 text-[15px] leading-relaxed text-deep-soft">{next.why}</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">
-                {CATEGORY[next.category].icon}{' '}
+              <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">
                 {L(CATEGORY[next.category].label, CATEGORY[next.category].labelKk)}
               </span>
-              <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">{next.window}</span>
-              <span className="rounded-full bg-white/10 px-3 py-1.5 text-[13px] font-semibold">{next.effort}</span>
+              <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">{next.window}</span>
+              <span className="rounded-full bg-deep-ink/15 px-3 py-1.5 text-[13px] font-semibold">{next.effort}</span>
             </div>
           </div>
           <div className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
@@ -227,7 +226,7 @@ export function Roadmap() {
                 filter === c ? 'border-brand-500 bg-brand-50 text-brand-900' : 'border-line text-ink-soft hover:border-brand-300'
               }`}
             >
-              {CATEGORY[c].icon} {L(CATEGORY[c].label, CATEGORY[c].labelKk)}
+              {L(CATEGORY[c].label, CATEGORY[c].labelKk)}
             </button>
           ))}
         </div>

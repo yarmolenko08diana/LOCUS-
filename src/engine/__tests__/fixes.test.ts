@@ -3,7 +3,10 @@ import type { Profile } from '../../types'
 import { SCHOLARSHIPS } from '../../data/scholarships'
 import { ACHIEVEMENT_FORMS_RAW, ACHIEVEMENT_KINDS_RAW, achievementForms, achievementLevels } from '../../data/taxonomy'
 import { matchScholarships } from '../scholarships'
-import { cscaPlan } from '../csca'
+import { cscaPlan, cscaTargets } from '../csca'
+import { PROGRAMS } from '../../data/programs'
+import { greet, nudge } from '../tone'
+import { displayName } from '../../store/account'
 import { buildRoadmap, allTasks } from '../roadmap'
 import { recommend } from '../match'
 import { demoCase } from '../../data/demoCases'
@@ -120,5 +123,47 @@ describe('форма достижения', () => {
       expect(f.weight, f.id).toBeGreaterThan(0.5)
       expect(f.weight, f.id).toBeLessThanOrEqual(1.25)
     }
+  })
+})
+
+describe('проходные баллы CSCA', () => {
+  it('даёт ориентир каждому китайскому вузу в базе', () => {
+    const cn = PROGRAMS.filter((x) => x.country === 'CN')
+    expect(cn.length).toBeGreaterThan(0)
+    for (const prog of cn) {
+      expect(prog.requirements.csca, prog.id).toBeDefined()
+      expect(prog.requirements.csca!, prog.id).toBeGreaterThanOrEqual(40)
+      expect(prog.requirements.csca!, prog.id).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('выстраивает ориентиры по убыванию и отдаёт их только для Китая', () => {
+    const targets = cscaTargets()
+    expect(targets.length).toBe(PROGRAMS.filter((x) => x.country === 'CN').length)
+    const scores = targets.map((t) => t.score)
+    expect([...scores].sort((a, b) => b - a)).toEqual(scores)
+  })
+
+  it('называет балл вуза в шаге плана, когда Китай выбран', () => {
+    const profile = p({ countries: ['CN'], fields: ['it'], relocation: true })
+    const tasks = allTasks(buildRoadmap(profile, recommend(profile)))
+    const task = tasks.find((t) => t.id === 'csca-plan')
+    expect(task).toBeDefined()
+    expect(task!.why).toMatch(/из 100/)
+    expect(task!.why).toMatch(/демонстрационная/)
+  })
+})
+
+describe('единый голос и имя', () => {
+  it('обращается на языке наставника, без выбора стиля', () => {
+    expect(greet('Жасмина')).toContain('Жасмина')
+    expect(greet('Жасмина')).toMatch(/разберём/i)
+    expect(nudge()).toBe('Логичный следующий шаг')
+  })
+
+  it('берёт имя из аккаунта, а не из анкеты', () => {
+    const account = { email: 'a@b.kz', firstName: 'Жасмина', lastName: 'Молдагали', createdAt: '2026-09-18T00:00:00.000Z' }
+    expect(displayName(account, 'Әсем')).toBe('Жасмина')
+    expect(displayName(null, 'Әсем')).toBe('Әсем')
   })
 })

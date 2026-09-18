@@ -1,6 +1,6 @@
 import type {
   AchievementAward, AchievementForm, AchievementKind, AchievementLevel, BudgetTier, CountryCode,
-  EnglishLevel, ExamId, FieldId, LanguageCode, Priority, SchoolSystem, Stage, ToneId,
+  EnglishLevel, ExamId, FieldId, LanguageCode, Priority, SchoolSystem, Stage,
 } from '../types'
 import { L } from '../i18n/lang'
 
@@ -477,12 +477,3 @@ export const FIELD_ACHIEVEMENTS: Record<FieldId, AchievementKind[]> = {
   agro: ['research', 'project', 'volunteer', 'course'],
 }
 
-export const TONES_RAW: { id: ToneId; label: string; labelKk: string; hint: string; hintKk: string; emoji: string }[] = [
-  { id: 'friendly', label: 'По-дружески', labelKk: 'Достарша', hint: 'просто и тепло, как со старшим другом', hintKk: 'қарапайым әрі жылы, үлкен достай', emoji: '🙂' },
-  { id: 'mentor', label: 'Наставник', labelKk: 'Тәлімгер', hint: 'спокойно объясняет, почему именно так', hintKk: 'неге дәл солай екенін байсалды түсіндіреді', emoji: '🧭' },
-  { id: 'coach', label: 'Коуч', labelKk: 'Коуч', hint: 'коротко и энергично, подталкивает к действию', hintKk: 'қысқа әрі қуатты, әрекетке итермелейді', emoji: '⚡' },
-  { id: 'formal', label: 'Официально', labelKk: 'Ресми', hint: 'сухо и по делу, без лишних слов', hintKk: 'құрғақ әрі нақты, артық сөзсіз', emoji: '📋' },
-]
-
-export const TONE_LABEL = labelMap<ToneId, (typeof TONES_RAW)[number]>(TONES_RAW)
-export function tones() { return localize(TONES_RAW) }

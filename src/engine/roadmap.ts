@@ -101,6 +101,18 @@ export function buildRoadmap(profile: Profile, recs: Recommendation[]): RoadmapP
   // и шаг бы то появлялся, то исчезал.
   if (csca.relevant) {
     const list = csca.subjects.map((sub) => L(sub.short, sub.shortKk))
+    // Ориентир берётся по всей выдаче, а не по топу: экзамен готовят заранее,
+    // а китайская программа может стоять и на седьмом месте — балл всё равно
+    // нужен, иначе шаг говорит «готовься», не называя цели.
+    const cnTop = recs
+      .filter((r) => r.program.country === 'CN' && r.program.requirements.csca !== undefined)
+      .sort((a, b) => b.program.requirements.csca! - a.program.requirements.csca!)[0]
+    const aim = cnTop
+      ? L(
+          ` Ориентир по ${cnTop.program.universityShort} — примерно ${cnTop.program.requirements.csca} из 100, это демонстрационная оценка.`,
+          ` ${cnTop.program.universityShort} бойынша бағдар — 100-ден шамамен ${cnTop.program.requirements.csca}, бұл демонстрациялық баға.`,
+        )
+      : ''
     add({
       id: 'csca-plan',
       title: L(
@@ -108,8 +120,8 @@ export function buildRoadmap(profile: Profile, recs: Recommendation[]): RoadmapP
         `CSCA-ға дайындықты бастау: ${listOf(list)}`,
       ),
       why: L(
-        `Это вступительный экзамен вузов Китая для иностранцев. Набор предметов собран под твоё направление и язык обучения. ${csca.trackNote}`,
-        `Бұл — Қытай ЖОО-ларының шетелдіктерге арналған кіру емтиханы. Пәндер жинағы бағытың мен оқу тіліңе қарай құрылған. ${csca.trackNote}`,
+        `Это вступительный экзамен вузов Китая для иностранцев. Набор предметов собран под твоё направление и язык обучения. ${csca.trackNote}${aim}`,
+        `Бұл — Қытай ЖОО-ларының шетелдіктерге арналған кіру емтиханы. Пәндер жинағы бағытың мен оқу тіліңе қарай құрылған. ${csca.trackNote}${aim}`,
       ),
       category: 'exam',
       phase: 'soon',

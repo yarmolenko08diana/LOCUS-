@@ -21,7 +21,6 @@ const base: Profile = {
   budget: 'upto6k',
   intakeYear: 2027,
   priorities: ['cost', 'employability'],
-  tone: 'friendly',
 }
 
 const p = (patch: Partial<Profile>): Profile => ({ ...base, ...patch })

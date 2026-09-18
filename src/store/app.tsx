@@ -19,7 +19,7 @@ import { clear, load, save, type PersistedShape } from './storage'
 import { demoCase, type DemoCase } from '../data/demoCases'
 import { reviewEssays, type CriterionState, type EssayReview } from '../engine/essay'
 import {
-  clearAccount, hashPassword, loadAccount, newSalt, saveAccount, view,
+  clearAccount, displayName, hashPassword, loadAccount, newSalt, saveAccount, view,
   type Account, type AccountView,
 } from './account'
 
@@ -41,7 +41,6 @@ export const EMPTY_PROFILE: Profile = {
   budget: 'upto6k',
   intakeYear: new Date().getFullYear() + 1,
   priorities: [],
-  tone: 'friendly',
 }
 
 /**
@@ -211,6 +210,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [changeNote, setChangeNote] = useState<ChangeNote | null>(null)
   const noteId = useRef(0)
 
+  const account = useMemo<AccountView | null>(
+    () => (signedIn && stored ? view(stored) : null),
+    [signedIn, stored],
+  )
+
+  /*
+   * Имя из аккаунта важнее имени из анкеты. Демо-кейсы и старые сохранения
+   * приносят своё имя, и без этой подмены диагностика здоровалась с одним
+   * человеком, а шапка — с другим.
+   */
+  const named = useMemo<Profile>(() => {
+    const who = displayName(account, profile.name)
+    return who === profile.name ? profile : { ...profile, name: who }
+  }, [account, profile])
+
   // Движок берёт язык отсюда; пересчёт ниже зависит от lang, поэтому тексты
   // рекомендаций всегда совпадают с языком интерфейса.
   setEngineLang(lang)
@@ -221,23 +235,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * языка не пересчитало бы тексты рекомендаций, плана и стипендий.
    */
   /* eslint-disable react-hooks/exhaustive-deps */
-  const recommendations = useMemo(() => recommend(profile), [profile, lang])
-  const diagnosis = useMemo(() => diagnose(profile, recommendations), [profile, recommendations, lang])
-  const roadmap = useMemo(() => buildRoadmap(profile, recommendations), [profile, recommendations, lang])
+  const recommendations = useMemo(() => recommend(named), [named, lang])
+  const diagnosis = useMemo(() => diagnose(named, recommendations), [named, recommendations, lang])
+  const roadmap = useMemo(() => buildRoadmap(named, recommendations), [named, recommendations, lang])
   const tasks = useMemo(() => allTasks(roadmap), [roadmap])
   const next = useMemo(() => nextAction(roadmap, done), [roadmap, done])
-  const scholarships = useMemo(() => matchScholarships(profile), [profile, lang])
+  const scholarships = useMemo(() => matchScholarships(named), [named, lang])
   /* eslint-enable react-hooks/exhaustive-deps */
   const calendar = useMemo(
-    () => buildCalendar(profile, recommendations, scholarships),
-    [profile, recommendations, scholarships],
+    () => buildCalendar(named, recommendations, scholarships),
+    [named, recommendations, scholarships],
   )
   // 12 вместо шести: на экране активности разложены по трём группам,
   // и короткого списка не хватает, чтобы наполнить каждую.
-  const activities = useMemo(() => suggestActivities(profile, 12), [profile])
-  const achievements = useMemo(() => summarizeAchievements(profile), [profile])
+  const activities = useMemo(() => suggestActivities(named, 12), [named])
+  const achievements = useMemo(() => summarizeAchievements(named), [named])
   /* eslint-disable-next-line react-hooks/exhaustive-deps -- язык движок читает из модуля */
-  const essays = useMemo(() => reviewEssays(profile, recommendations, essay), [profile, recommendations, essay, lang])
+  const essays = useMemo(() => reviewEssays(named, recommendations, essay), [named, recommendations, essay, lang])
 
   useEffect(() => {
     save({ profile, completed, done, saved: savedIds, compare, reminders, essay, lang, theme })
@@ -327,11 +341,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
    * вариант — «запомнить меня» означало бы хранить признак входа рядом
    * с хешем, и тогда пароль перестал бы что-либо защищать.
    */
-  const account = useMemo<AccountView | null>(
-    () => (signedIn && stored ? view(stored) : null),
-    [signedIn, stored],
-  )
-
   const signUp = useCallback(
     async (input: { email: string; password: string; firstName: string; lastName: string }) => {
       const salt = newSalt()

@@ -35,11 +35,34 @@ export function LangToggle() {
 
 const THEME_ORDER: ThemeMode[] = ['system', 'light', 'dark']
 
+/**
+ * Иконка темы рисуется контуром, а не эмодзи: эмодзи монитора и телефона
+ * подгружаются системным шрифтом и на секунду мелькали при переключении.
+ */
+function ThemeIcon({ mode }: { mode: ThemeMode }) {
+  return (
+    <svg viewBox="0 0 20 20" className="h-[15px] w-[15px]" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden focusable="false">
+      {mode === 'dark' ? (
+        <path d="M16 12.4A6.6 6.6 0 0 1 7.6 4a6.8 6.8 0 1 0 8.4 8.4Z" />
+      ) : mode === 'light' ? (
+        <>
+          <circle cx="10" cy="10" r="3.4" />
+          <path d="M10 2.6v1.7M10 15.7v1.7M2.6 10h1.7M15.7 10h1.7M4.8 4.8l1.2 1.2M14 14l1.2 1.2M15.2 4.8 14 6M6 14l-1.2 1.2" />
+        </>
+      ) : (
+        <>
+          <circle cx="10" cy="10" r="6.6" />
+          <path d="M10 3.4a6.6 6.6 0 0 1 0 13.2Z" fill="currentColor" stroke="none" />
+        </>
+      )}
+    </svg>
+  )
+}
+
 /** Тема оформления: по системе, светлая, тёмная. Переключается по кругу. */
 export function ThemeToggle() {
   const { theme, setTheme } = useApp()
   const L = useL()
-  const icon: Record<ThemeMode, string> = { system: '🖥', light: '☀', dark: '☾' }
   const name: Record<ThemeMode, string> = {
     system: L('как в системе', 'жүйедегідей'),
     light: L('светлая', 'ашық'),
@@ -54,7 +77,7 @@ export function ThemeToggle() {
       aria-label={`${L('Тема оформления', 'Безендіру тақырыбы')}: ${name[theme]}. ${L('Переключить на', 'Ауыстыру')}: ${name[next]}`}
       className="grid h-8 w-8 place-items-center rounded-lg border border-line bg-surface text-[14px] text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700"
     >
-      <span aria-hidden>{icon[theme]}</span>
+      <ThemeIcon mode={theme} />
     </button>
   )
 }
@@ -68,9 +91,8 @@ export function AppSoonBadge({ className = '' }: { className?: string }) {
   const L = useL()
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-700 ${className}`}
+      className={`inline-flex items-center rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-brand-700 ${className}`}
     >
-      <span aria-hidden>📱</span>
       {L('Приложение — скоро', 'Қосымша — жақында')}
     </span>
   )

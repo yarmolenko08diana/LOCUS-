@@ -32,6 +32,12 @@ export default {
           700: token('--c-brand-700'),
           900: token('--c-brand-900'),
         },
+        deep: {
+          DEFAULT: token('--c-deep'),
+          ink: token('--c-deep-ink'),
+          soft: token('--c-deep-soft'),
+          muted: token('--c-deep-muted'),
+        },
         mint: {
           50: token('--c-mint-50'),
           100: token('--c-mint-100'),

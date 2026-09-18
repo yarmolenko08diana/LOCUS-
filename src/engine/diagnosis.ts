@@ -197,7 +197,7 @@ export function diagnose(profile: Profile, recs: Recommendation[]): Diagnosis {
     profile.achievements.length > 0,
   ]
   const readiness = Math.round((filled.filter(Boolean).length / filled.length) * 100)
-  const readinessNote = readinessPhrase(profile.tone, readiness)
+  const readinessNote = readinessPhrase(readiness)
 
   const strong = recs.filter((r) => r.score >= 62).length
   const headline = profile.fields.length
@@ -208,7 +208,7 @@ export function diagnose(profile: Profile, recs: Recommendation[]): Diagnosis {
     : L('Профиль без выбранного направления', 'Бағыты таңдалмаған профиль')
 
   const summary =
-    `${greet(profile.tone, profile.name)} ` +
+    `${greet(profile.name)} ` +
     L(
       `Мы разобрали ${countOf(recs.length, 'программу', 'программы', 'программ')} из демо-базы, ` +
         `${strong} ${strong === 1 ? 'из них подходит' : 'из них подходят'} тебе по совокупности условий. `,

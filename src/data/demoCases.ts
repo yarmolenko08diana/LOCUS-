@@ -55,7 +55,6 @@ export const DEMO_CASES: DemoCase[] = [
       budget: 'above15k',
       intakeYear: year + 1,
       priorities: ['prestige', 'employability'],
-      tone: 'mentor',
     },
   },
   {
@@ -85,7 +84,6 @@ export const DEMO_CASES: DemoCase[] = [
       budget: 'upto6k',
       intakeYear: year + 1,
       priorities: ['cost', 'employability'],
-      tone: 'friendly',
     },
   },
   {
@@ -112,7 +110,6 @@ export const DEMO_CASES: DemoCase[] = [
       budget: 'grant-only',
       intakeYear: year + 2,
       priorities: ['cost', 'closeToHome'],
-      tone: 'coach',
     },
   },
 ]

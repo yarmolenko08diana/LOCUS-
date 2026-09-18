@@ -237,6 +237,9 @@ export function ProgramDetail() {
               p.requirements.gpa !== undefined
                 ? L(`Средний балл от ${p.requirements.gpa.toFixed(1)}`, `Орташа балл ${p.requirements.gpa.toFixed(1)}-тен`)
                 : null,
+              p.requirements.csca !== undefined
+                ? L(`CSCA примерно от ${p.requirements.csca} из 100`, `CSCA шамамен 100-ден ${p.requirements.csca}`)
+                : null,
               p.requirements.portfolio ? L('Портфолио работ', 'Жұмыстар портфолиосы') : null,
               p.requirements.entranceExam ?? null,
             ]

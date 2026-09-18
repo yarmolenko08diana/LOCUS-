@@ -26,28 +26,28 @@ export function ChangeToast() {
       aria-live="polite"
       className="safe-bottom pointer-events-none fixed inset-x-0 bottom-16 z-50 flex justify-center px-4 md:bottom-6"
     >
-      <div className="pointer-events-auto w-full max-w-md animate-fade-up rounded-2xl border border-brand-200 bg-brand-900 p-4 text-white shadow-lift">
+      <div className="pointer-events-auto w-full max-w-md animate-fade-up rounded-2xl border border-deep/40 bg-deep p-4 text-deep-ink shadow-lift">
         <div className="flex items-start gap-3">
           <span aria-hidden className="mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full bg-mint-500 text-[13px]">↻</span>
           <div className="min-w-0 flex-1">
             <p className="text-[15px] font-bold leading-snug">{changeNote.headline}</p>
             <ul className="mt-1.5 space-y-1">
               {changeNote.details.map((d) => (
-                <li key={d} className="text-[13px] leading-snug text-brand-100">{d}</li>
+                <li key={d} className="text-[13px] leading-snug text-deep-soft">{d}</li>
               ))}
             </ul>
             <div className="mt-3 flex gap-2">
               <button
                 type="button"
                 onClick={() => { dismissChange(); navigate('/matches') }}
-                className="rounded-lg bg-white px-3 py-1.5 text-[13px] font-bold text-brand-900"
+                className="rounded-lg bg-deep-ink px-3 py-1.5 text-[13px] font-bold text-deep"
               >
                 {L('Посмотреть подбор', 'Таңдауды қарау')}
               </button>
               <button
                 type="button"
                 onClick={dismissChange}
-                className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-brand-200 hover:text-white"
+                className="rounded-lg px-3 py-1.5 text-[13px] font-semibold text-deep-muted hover:text-deep-ink"
               >
                 {L('Скрыть', 'Жасыру')}
               </button>

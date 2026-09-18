@@ -7,10 +7,10 @@ import {
   ACHIEVEMENT_KIND_EMOJI, achievementAwards, achievementExample, achievementForms,
   achievementKinds, achievementLevels,
   budgets, countries, englishLevels, exams, fields, languages, priorities,
-  schoolSystems, stages, subjects, tones,
+  schoolSystems, stages, subjects,
 } from '../data/taxonomy'
 import { achievementLabel, summarizeAchievements } from '../engine/achievements'
-import { cscaPlan } from '../engine/csca'
+import { cscaPlan, cscaTargets } from '../engine/csca'
 import type {
   Achievement, AchievementAward, AchievementForm, AchievementKind, AchievementLevel, ExamId, Profile,
 } from '../types'
@@ -288,16 +288,25 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
 }
 
 export function Survey() {
-  const { profile, completed, completeSurvey, setProfile } = useApp()
+  const { profile, completed, completeSurvey, setProfile, account } = useApp()
   const L = useL()
   const navigate = useNavigate()
-  const [draft, setDraft] = useState<Profile>(profile)
+  /*
+   * У вошедшего человека имя уже есть, и переспрашивать его — значит рисковать
+   * тем, что в анкете останется имя из демо-кейса, а в шапке будет своё.
+   * Поэтому поле сразу заполнено именем аккаунта и правится в профиле.
+   */
+  const [draft, setDraft] = useState<Profile>(() =>
+    account ? { ...profile, name: account.firstName } : profile,
+  )
   const [index, setIndex] = useState(0)
   const [touched, setTouched] = useState(false)
 
   // Набор предметов CSCA пересобирается на лету: он зависит от направления
   // и от языков в анкете, а их правят на соседних шагах.
   const csca = useMemo(() => cscaPlan(draft), [draft])
+  // База китайских программ не зависит от анкеты, поэтому считается один раз.
+  const cscaScores = useMemo(() => cscaTargets(), [])
 
   const step = STEP_DEFS[index]
   const isLast = index === STEP_DEFS.length - 1
@@ -346,14 +355,19 @@ export function Survey() {
             <label className="block">
               <span className="text-[15px] font-semibold">{L('Как к тебе обращаться?', 'Саған қалай жүгінейік?')}</span>
               <span className="mt-0.5 block text-xs text-ink-muted">
-                {L('Необязательно. Имя никуда не отправляется.', 'Міндетті емес. Есім ешқайда жіберілмейді.')}
+                {account
+                  ? L('Имя из твоего аккаунта. Изменить его можно в профиле.', 'Аккаунтыңдағы есім. Оны профильде өзгертуге болады.')
+                  : L('Необязательно. Имя никуда не отправляется.', 'Міндетті емес. Есім ешқайда жіберілмейді.')}
               </span>
               <input
                 type="text"
-                value={draft.name}
+                value={account ? account.firstName : draft.name}
+                readOnly={Boolean(account)}
                 placeholder={L('Имя', 'Есім')}
                 onChange={(e) => patch({ name: e.target.value })}
-                className="mt-2 h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] transition-colors placeholder:text-ink-muted focus:border-brand-400"
+                className={`mt-2 h-11 w-full rounded-xl border border-line px-3.5 text-[15px] transition-colors placeholder:text-ink-muted focus:border-brand-400 ${
+                  account ? 'bg-paper text-ink-soft' : 'bg-surface'
+                }`}
               />
             </label>
 
@@ -604,8 +618,23 @@ export function Survey() {
                     </li>
                   ))}
                 </ul>
+                <p className="label mb-2 mt-5">{L('Ориентиры по вузам', 'ЖОО бойынша бағдарлар')}</p>
+                <ul className="space-y-1.5">
+                  {cscaScores.map((t) => (
+                    <li key={t.id} className="flex items-baseline justify-between gap-3 border-t border-line pt-1.5 first:border-t-0 first:pt-0">
+                      <span className="text-[13.5px] leading-snug">
+                        <span className="font-bold">{t.university}</span>
+                        <span className="text-ink-muted"> · {t.program}</span>
+                      </span>
+                      <span className="shrink-0 text-[13.5px] font-bold tabular-nums">{t.score}</span>
+                    </li>
+                  ))}
+                </ul>
                 <DemoNote className="mt-3">
-                  {L('Состав предметов зависит от вуза и программы. Сверяйте на ', 'Пәндер құрамы ЖОО мен бағдарламаға байланысты. Тексеріңіз: ')}
+                  {L(
+                    'Баллы — средние по предметам набора из 100 и приведены как ориентир: вузы Китая не публикуют единой таблицы порогов, планка меняется каждый год. Состав предметов зависит от вуза и программы. Сверяйте на ',
+                    'Балдар — жинақ пәндері бойынша 100-ден орташа мән, бағдар ретінде берілген: Қытай ЖОО-лары бірыңғай шектер кестесін жарияламайды, деңгей жыл сайын өзгереді. Пәндер құрамы ЖОО мен бағдарламаға байланысты. Тексеріңіз: ',
+                  )}
                   <a href={csca.source.url} target="_blank" rel="noreferrer noopener" className="font-semibold underline underline-offset-2">
                     {csca.source.label} ↗
                   </a>
@@ -765,20 +794,6 @@ export function Survey() {
                     onClick={() => patch({ priorities: toggle(draft.priorities, p.id) })}
                   >
                     {p.label}
-                  </Chip>
-                ))}
-              </div>
-            </fieldset>
-
-            <fieldset>
-              <legend className="text-[15px] font-semibold">{L('Как с тобой разговаривать', 'Сенімен қалай сөйлесу керек')}</legend>
-              <span className="mt-0.5 block text-xs text-ink-muted">
-                {L('Меняет тон подсказок и диагностики, но не сами рекомендации.', 'Кеңестер мен диагностика үнін өзгертеді, ұсыныстарды емес.')}
-              </span>
-              <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                {tones().map((t) => (
-                  <Chip key={t.id} active={draft.tone === t.id} hint={t.hint} onClick={() => patch({ tone: t.id })}>
-                    {t.emoji} {t.label}
                   </Chip>
                 ))}
               </div>

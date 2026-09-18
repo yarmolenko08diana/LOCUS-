@@ -33,9 +33,6 @@ export type Lang = 'ru' | 'kk'
 /** Оформление интерфейса; 'system' следует за настройкой устройства. */
 export type ThemeMode = 'light' | 'dark' | 'system'
 
-/** Стиль общения продукта с пользователем. */
-export type ToneId = 'friendly' | 'mentor' | 'coach' | 'formal'
-
 /** Учебная система школы: от неё зависит, в каких баллах считать успеваемость. */
 export type SchoolSystem = 'kz' | 'nis' | 'ib' | 'other'
 
@@ -129,8 +126,6 @@ export interface Profile {
   /** Год предполагаемого поступления, например 2027. */
   intakeYear: number
   priorities: Priority[]
-  /** Стиль, которым продукт разговаривает с пользователем. */
-  tone: ToneId
 }
 
 export interface Requirement {
@@ -142,6 +137,12 @@ export interface Requirement {
   /** Минимальный балл диплома IB, если вуз принимает IB напрямую. */
   ib?: number
   portfolio?: boolean
+  /**
+   * Ориентировочный проходной балл CSCA — среднее по предметам набора из 100.
+   * Демонстрационные данные: официальных публичных порогов китайские вузы
+   * не печатают, ориентир собран по объявлениям приёмных комиссий.
+   */
+  csca?: number
   entranceExam?: string
 }
 

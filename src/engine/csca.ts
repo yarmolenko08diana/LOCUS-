@@ -1,5 +1,6 @@
 import type { FieldId, LanguageCode, Profile } from '../types'
 import { L } from '../i18n/lang'
+import { PROGRAMS } from '../data/programs'
 
 /**
  * CSCA — вступительный экзамен для иностранцев, поступающих в вузы Китая.
@@ -137,4 +138,37 @@ export function cscaPlan(profile: Profile): CscaPlan {
     subjects,
     source: { label: 'campuschina.org', url: 'https://www.campuschina.org' },
   }
+}
+
+/** Ориентир по баллу CSCA у конкретной программы. */
+export interface CscaTarget {
+  id: string
+  university: string
+  program: string
+  /** Средний балл по предметам набора из 100. */
+  score: number
+}
+
+/**
+ * Проходные баллы CSCA по китайским вузам из базы.
+ *
+ * Вузы Китая не публикуют единой таблицы порогов: набор идёт волнами, и
+ * планка каждый год плавает. Поэтому это ориентир, а не обещание, и он
+ * всегда показывается с пометкой о демонстрационных данных.
+ */
+export function cscaTargets(): CscaTarget[] {
+  return PROGRAMS
+    .filter((p) => p.country === 'CN' && p.requirements.csca !== undefined)
+    .map((p) => ({
+      id: p.id,
+      university: p.universityShort,
+      program: p.program,
+      score: p.requirements.csca!,
+    }))
+    .sort((a, b) => b.score - a.score)
+}
+
+/** Ориентир для одной программы, если он есть. */
+export function cscaTarget(id: string): number | undefined {
+  return PROGRAMS.find((p) => p.id === id)?.requirements.csca
 }

@@ -69,12 +69,6 @@ export function Welcome() {
             <span aria-hidden>→</span>
           </Button>
         </div>
-        <p className="mt-3 text-[13px] text-ink-muted">
-          {L(
-            'Без регистрации. Ответы хранятся только в твоём браузере.',
-            'Тіркелусіз. Жауаптар тек сенің браузеріңде сақталады.',
-          )}
-        </p>
       </section>
 
       <section className="mt-10">
@@ -143,26 +137,26 @@ export function Welcome() {
       </section>
 
       <section className="mt-10">
-        <Card className="bg-brand-900 p-6 text-white sm:p-8">
+        <Card className="bg-deep p-6 text-deep-ink sm:p-8">
           <div className="flex flex-wrap items-end gap-x-10 gap-y-5">
             <div>
               <p className="text-3xl font-extrabold tabular-nums">{PROGRAMS.length}</p>
-              <p className="mt-1 text-sm text-brand-200">{L('программ в демо-базе', 'демо-базадағы бағдарлама')}</p>
+              <p className="mt-1 text-sm text-deep-muted">{L('программ в демо-базе', 'демо-базадағы бағдарлама')}</p>
             </div>
             <div>
               <p className="text-3xl font-extrabold tabular-nums">{COUNTRIES_RAW.length}</p>
-              <p className="mt-1 text-sm text-brand-200">{L('стран в подборе', 'таңдаудағы ел')}</p>
+              <p className="mt-1 text-sm text-deep-muted">{L('стран в подборе', 'таңдаудағы ел')}</p>
             </div>
             <div>
               <p className="text-3xl font-extrabold tabular-nums">{SCHOLARSHIPS.length}</p>
-              <p className="mt-1 text-sm text-brand-200">{L('стипендий и грантов', 'шәкіртақы мен грант')}</p>
+              <p className="mt-1 text-sm text-deep-muted">{L('стипендий и грантов', 'шәкіртақы мен грант')}</p>
             </div>
             <div>
               <p className="text-3xl font-extrabold tabular-nums">{Object.keys(WEIGHTS).length}</p>
-              <p className="mt-1 text-sm text-brand-200">{L('критериев подбора с весами', 'салмағы бар таңдау өлшемі')}</p>
+              <p className="mt-1 text-sm text-deep-muted">{L('критериев подбора с весами', 'салмағы бар таңдау өлшемі')}</p>
             </div>
           </div>
-          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-brand-100">
+          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-deep-soft">
             {L(
               'Подбор строится прозрачным движком: каждый процент совпадения раскладывается на направление, проходимость, бюджет, географию, язык, достижения и твои приоритеты. Никаких скрытых оценок и обещаний поступления.',
               'Таңдау ашық қозғалтқышпен құрылады: сәйкестіктің әр пайызы бағытқа, өту мүмкіндігіне, бюджетке, географияға, тілге, жетістіктерге және басымдықтарыңа жіктеледі. Жасырын баға мен түсу уәдесі жоқ.',
