@@ -1,52 +1,94 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Button, Card, Chip, DemoNote, Meter } from '../components/ui'
+import { Badge, Button, Card, Chip, DemoNote, Meter } from '../components/ui'
 import { useApp } from '../store/app'
+import { useL } from '../i18n/LangContext'
 import {
-  BUDGETS, COUNTRIES, ENGLISH_LEVELS, EXAMS, FIELDS, LANGUAGES, PRIORITIES, STAGES, SUBJECTS,
+  ACHIEVEMENT_AWARDS, ACHIEVEMENT_KINDS, ACHIEVEMENT_KIND_EMOJI, ACHIEVEMENT_LEVELS,
+  BUDGETS, COUNTRIES, ENGLISH_LEVELS, EXAMS, FIELDS, LANGUAGES, PRIORITIES,
+  SCHOOL_SYSTEMS, STAGES, SUBJECTS, TONES,
 } from '../data/taxonomy'
-import type { ExamId, Profile } from '../types'
+import { achievementLabel, summarizeAchievements } from '../engine/achievements'
+import type {
+  Achievement, AchievementAward, AchievementKind, AchievementLevel, ExamId, Profile,
+} from '../types'
 
 interface StepDef {
   id: string
   title: string
+  titleKk: string
   hint: string
+  hintKk: string
   /** Можно ли идти дальше. */
   valid: (p: Profile) => boolean
   error?: string
+  errorKk?: string
 }
 
 const STEP_DEFS: StepDef[] = [
-  { id: 'about', title: 'Расскажи о себе', hint: 'Этап учёбы задаёт, сколько времени осталось до подачи.', valid: () => true },
+  {
+    id: 'about',
+    title: 'Расскажи о себе', titleKk: 'Өзің туралы айт',
+    hint: 'Этап учёбы задаёт, сколько времени осталось до подачи.',
+    hintKk: 'Оқу кезеңі өтінім беруге қанша уақыт қалғанын анықтайды.',
+    valid: () => true,
+  },
   {
     id: 'fields',
-    title: 'Что тебе интересно?',
+    title: 'Что тебе интересно?', titleKk: 'Саған не қызық?',
     hint: 'Выбери до трёх направлений. Первое выбранное считается главным.',
+    hintKk: 'Үш бағытқа дейін таңда. Бірінші таңдағаның басты болып саналады.',
     valid: (p) => p.fields.length > 0,
     error: 'Выбери хотя бы одно направление',
+    errorKk: 'Кемінде бір бағыт таңда',
   },
-  { id: 'study', title: 'Как учишься сейчас?', hint: 'Средний балл и сильные предметы влияют на проходимость.', valid: () => true },
+  {
+    id: 'study',
+    title: 'Как учишься сейчас?', titleKk: 'Қазір қалай оқып жүрсің?',
+    hint: 'Система школы и баллы влияют на то, как считается проходимость.',
+    hintKk: 'Мектеп жүйесі мен балдар өту мүмкіндігінің қалай есептелетініне әсер етеді.',
+    valid: () => true,
+  },
   {
     id: 'language',
-    title: 'Языки',
+    title: 'Языки', titleKk: 'Тілдер',
     hint: 'На каких языках тебе подходит учиться.',
+    hintKk: 'Қай тілдерде оқу саған қолайлы.',
     valid: (p) => p.languages.length > 0,
     error: 'Отметь хотя бы один язык',
+    errorKk: 'Кемінде бір тілді белгіле',
   },
-  { id: 'exams', title: 'Экзамены', hint: 'Что уже сдано и что планируешь сдавать.', valid: () => true },
+  {
+    id: 'exams',
+    title: 'Экзамены', titleKk: 'Емтихандар',
+    hint: 'Что уже сдано и что планируешь сдавать.',
+    hintKk: 'Не тапсырылды және нені тапсыруды жоспарлайсың.',
+    valid: () => true,
+  },
+  {
+    id: 'achievements',
+    title: 'Достижения', titleKk: 'Жетістіктер',
+    hint: 'Олимпиады, проекты, волонтёрство, хакатоны. Каждое добавленное достижение сразу меняет подбор и маршрут.',
+    hintKk: 'Олимпиадалар, жобалар, волонтёрлық, хакатондар. Қосылған әр жетістік таңдау мен маршрутты бірден өзгертеді.',
+    valid: () => true,
+  },
   {
     id: 'geo',
-    title: 'География',
+    title: 'География', titleKk: 'География',
     hint: 'Куда в принципе есть смысл смотреть.',
+    hintKk: 'Қай елдерге қарауға болады.',
     valid: (p) => p.countries.length > 0,
     error: 'Выбери хотя бы одну страну',
+    errorKk: 'Кемінде бір ел таңда',
   },
   {
     id: 'budget',
-    title: 'Бюджет и приоритеты',
-    hint: 'Последний шаг: что важнее всего при выборе.',
+    title: 'Бюджет и приоритеты', titleKk: 'Бюджет және басымдықтар',
+    hint: 'Последний шаг: что важнее всего при выборе и как с тобой разговаривать.',
+    hintKk: 'Соңғы қадам: таңдауда не маңызды және сенімен қалай сөйлесу керек.',
     valid: (p) => p.priorities.length > 0,
     error: 'Отметь хотя бы один приоритет',
+    errorKk: 'Кемінде бір басымдықты белгіле',
   },
 ]
 
@@ -93,8 +135,131 @@ function NumberField({
   )
 }
 
+/** Форма добавления достижения: вид, масштаб, результат и название. */
+function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => void }) {
+  const L = useL()
+  const currentYear = new Date().getFullYear()
+  const [kind, setKind] = useState<AchievementKind>('olympiad')
+  const [level, setLevel] = useState<AchievementLevel>('city')
+  const [award, setAward] = useState<AchievementAward>('participant')
+  const [title, setTitle] = useState('')
+  const [year, setYear] = useState(currentYear)
+  const [hours, setHours] = useState<number | undefined>(undefined)
+
+  const needsHours = kind === 'volunteer' || kind === 'internship' || kind === 'course'
+  const canAdd = title.trim().length >= 3
+
+  return (
+    <Card className="p-4">
+      <p className="label mb-2.5">{L('Добавить достижение', 'Жетістік қосу')}</p>
+
+      <div className="no-scrollbar -mx-1 overflow-x-auto px-1">
+        <div className="flex min-w-max gap-1.5 pb-1">
+          {ACHIEVEMENT_KINDS.map((k) => (
+            <button
+              key={k.id}
+              type="button"
+              onClick={() => setKind(k.id)}
+              aria-pressed={kind === k.id}
+              className={`flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold transition-colors ${
+                kind === k.id
+                  ? 'border-brand-500 bg-brand-50 text-brand-900'
+                  : 'border-line bg-surface text-ink-soft hover:border-brand-300'
+              }`}
+            >
+              <span aria-hidden>{k.emoji}</span>
+              {k.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <label className="mt-3 block">
+        <span className="text-sm font-semibold">{L('Название', 'Атауы')}</span>
+        <input
+          type="text"
+          value={title}
+          placeholder={L('Например: областная олимпиада по физике', 'Мысалы: физикадан облыстық олимпиада')}
+          onChange={(e) => setTitle(e.target.value)}
+          className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] transition-colors placeholder:text-ink-muted focus:border-brand-400"
+        />
+      </label>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="text-sm font-semibold">{L('Масштаб', 'Деңгейі')}</span>
+          <select
+            value={level}
+            onChange={(e) => setLevel(e.target.value as AchievementLevel)}
+            className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3 text-[15px] focus:border-brand-400"
+          >
+            {ACHIEVEMENT_LEVELS.map((l) => (
+              <option key={l.id} value={l.id}>{l.label}</option>
+            ))}
+          </select>
+        </label>
+        <label className="block">
+          <span className="text-sm font-semibold">{L('Результат', 'Нәтиже')}</span>
+          <select
+            value={award}
+            onChange={(e) => setAward(e.target.value as AchievementAward)}
+            className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3 text-[15px] focus:border-brand-400"
+          >
+            {ACHIEVEMENT_AWARDS.map((a) => (
+              <option key={a.id} value={a.id}>{a.label}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <NumberField
+          label={L('Год', 'Жылы')}
+          hint={L('когда это было', 'қашан болды')}
+          placeholder={String(currentYear)}
+          min={currentYear - 8}
+          max={currentYear}
+          value={year}
+          onChange={(v) => setYear(v ?? currentYear)}
+        />
+        {needsHours && (
+          <NumberField
+            label={L('Часы', 'Сағат')}
+            hint={L('сколько часов всего', 'барлығы қанша сағат')}
+            placeholder={L('необязательно', 'міндетті емес')}
+            min={0}
+            max={2000}
+            step={10}
+            value={hours}
+            onChange={setHours}
+          />
+        )}
+      </div>
+
+      <Button
+        className="mt-4"
+        full
+        disabled={!canAdd}
+        onClick={() => {
+          onAdd({ kind, level, award, title: title.trim(), year, hours: needsHours ? hours : undefined })
+          setTitle('')
+          setHours(undefined)
+        }}
+      >
+        {L('Добавить', 'Қосу')}
+      </Button>
+      {!canAdd && (
+        <p className="mt-2 text-xs text-ink-muted">
+          {L('Напиши название — так достижение будет понятно и тебе, и приёмной комиссии.', 'Атауын жаз — сонда жетістік саған да, қабылдау комиссиясына да түсінікті болады.')}
+        </p>
+      )}
+    </Card>
+  )
+}
+
 export function Survey() {
   const { profile, completed, completeSurvey, setProfile } = useApp()
+  const L = useL()
   const navigate = useNavigate()
   const [draft, setDraft] = useState<Profile>(profile)
   const [index, setIndex] = useState(0)
@@ -109,6 +274,7 @@ export function Survey() {
 
   const currentYear = new Date().getFullYear()
   const years = useMemo(() => [currentYear, currentYear + 1, currentYear + 2, currentYear + 3], [currentYear])
+  const achSummary = useMemo(() => summarizeAchievements(draft), [draft])
 
   function goNext() {
     if (!valid) { setTouched(true); return }
@@ -127,32 +293,38 @@ export function Survey() {
     <div className="mx-auto max-w-2xl animate-fade-up pb-8">
       <div className="mb-6">
         <div className="mb-2 flex items-baseline justify-between">
-          <p className="label">Шаг {index + 1} из {STEP_DEFS.length}</p>
+          <p className="label">
+            {L(`Шаг ${index + 1} из ${STEP_DEFS.length}`, `${STEP_DEFS.length} қадамның ${index + 1}-сі`)}
+          </p>
           <p className="text-xs font-semibold tabular-nums text-ink-muted">{progress}%</p>
         </div>
         <Meter value={progress} />
       </div>
 
-      <h1 className="text-[26px] font-extrabold leading-tight tracking-[-0.02em] sm:text-3xl">{step.title}</h1>
-      <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{step.hint}</p>
+      <h1 className="text-[26px] font-extrabold leading-tight tracking-[-0.02em] sm:text-3xl">
+        {L(step.title, step.titleKk)}
+      </h1>
+      <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{L(step.hint, step.hintKk)}</p>
 
       <div className="mt-6 space-y-6">
         {step.id === 'about' && (
           <>
             <label className="block">
-              <span className="text-[15px] font-semibold">Как к тебе обращаться?</span>
-              <span className="mt-0.5 block text-xs text-ink-muted">Необязательно. Имя никуда не отправляется.</span>
+              <span className="text-[15px] font-semibold">{L('Как к тебе обращаться?', 'Саған қалай жүгінейік?')}</span>
+              <span className="mt-0.5 block text-xs text-ink-muted">
+                {L('Необязательно. Имя никуда не отправляется.', 'Міндетті емес. Есім ешқайда жіберілмейді.')}
+              </span>
               <input
                 type="text"
                 value={draft.name}
-                placeholder="Имя"
+                placeholder={L('Имя', 'Есім')}
                 onChange={(e) => patch({ name: e.target.value })}
                 className="mt-2 h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] transition-colors placeholder:text-ink-muted focus:border-brand-400"
               />
             </label>
 
             <fieldset>
-              <legend className="text-[15px] font-semibold">На каком ты этапе?</legend>
+              <legend className="text-[15px] font-semibold">{L('На каком ты этапе?', 'Қай кезеңдесің?')}</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {STAGES.map((s) => (
                   <Chip key={s.id} active={draft.stage === s.id} hint={s.hint} onClick={() => patch({ stage: s.id })}>
@@ -163,7 +335,7 @@ export function Survey() {
             </fieldset>
 
             <fieldset>
-              <legend className="text-[15px] font-semibold">Год поступления</legend>
+              <legend className="text-[15px] font-semibold">{L('Год поступления', 'Оқуға түсу жылы')}</legend>
               <div className="mt-2 grid grid-cols-4 gap-2">
                 {years.map((y) => (
                   <button
@@ -190,7 +362,7 @@ export function Survey() {
               <Chip
                 key={f.id}
                 active={draft.fields.includes(f.id)}
-                hint={draft.fields[0] === f.id ? 'главное направление' : f.hint}
+                hint={draft.fields[0] === f.id ? L('главное направление', 'басты бағыт') : f.hint}
                 onClick={() => patch({ fields: toggle(draft.fields, f.id, 3) })}
               >
                 {f.emoji} {f.label}
@@ -201,29 +373,88 @@ export function Survey() {
 
         {step.id === 'study' && (
           <>
-            <div>
-              <div className="flex items-baseline justify-between">
-                <span className="text-[15px] font-semibold">Средний балл</span>
-                <span className="text-2xl font-extrabold tabular-nums text-brand-600">{draft.gpa.toFixed(1)}</span>
+            <fieldset>
+              <legend className="text-[15px] font-semibold">{L('В какой школе учишься?', 'Қай мектепте оқисың?')}</legend>
+              <span className="mt-0.5 block text-xs text-ink-muted">
+                {L('От этого зависит, в каких баллах считать успеваемость.', 'Үлгерімді қандай балмен санайтыны осыған байланысты.')}
+              </span>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {SCHOOL_SYSTEMS.map((s) => (
+                  <Chip
+                    key={s.id}
+                    active={draft.schoolSystem === s.id}
+                    hint={s.hint}
+                    onClick={() => patch({ schoolSystem: s.id })}
+                  >
+                    {s.label}
+                  </Chip>
+                ))}
               </div>
-              <span className="mt-0.5 block text-xs text-ink-muted">По пятибалльной шкале, примерно.</span>
-              <input
-                type="range"
-                min={3}
-                max={5}
-                step={0.1}
-                value={draft.gpa}
-                onChange={(e) => patch({ gpa: Number(e.target.value) })}
-                className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-line accent-brand-600"
+            </fieldset>
+
+            {draft.schoolSystem === 'nis' && (
+              <NumberField
+                label={L('Итоговый балл НИШ', 'НЗМ қорытынды балы')}
+                hint={L('по 100-балльной шкале', '100 балдық шкала бойынша')}
+                placeholder={L('например, 85', 'мысалы, 85')}
+                min={0}
+                max={100}
+                value={draft.exams.nis}
+                onChange={(v) => patch({ exams: { ...draft.exams, nis: v } })}
               />
-              <div className="mt-1 flex justify-between text-xs text-ink-muted">
-                <span>3.0</span><span>4.0</span><span>5.0</span>
+            )}
+
+            {draft.schoolSystem === 'ib' && (
+              <NumberField
+                label={L('Итоговый балл IB', 'IB қорытынды балы')}
+                hint={L('24–45, диплом International Baccalaureate', '24–45, International Baccalaureate дипломы')}
+                placeholder={L('например, 34', 'мысалы, 34')}
+                min={24}
+                max={45}
+                value={draft.exams.ib}
+                onChange={(v) => patch({ exams: { ...draft.exams, ib: v } })}
+              />
+            )}
+
+            {(draft.schoolSystem === 'kz' || draft.schoolSystem === 'other') && (
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-[15px] font-semibold">{L('Средний балл', 'Орташа бал')}</span>
+                  <span className="text-2xl font-extrabold tabular-nums text-brand-600">{draft.gpa.toFixed(1)}</span>
+                </div>
+                <span className="mt-0.5 block text-xs text-ink-muted">
+                  {L('По пятибалльной шкале, примерно.', 'Бес балдық шкала бойынша, шамамен.')}
+                </span>
+                <input
+                  type="range"
+                  min={3}
+                  max={5}
+                  step={0.1}
+                  value={draft.gpa}
+                  aria-label={L('Средний балл', 'Орташа бал')}
+                  onChange={(e) => patch({ gpa: Number(e.target.value) })}
+                  className="mt-3 h-2 w-full cursor-pointer appearance-none rounded-full bg-line accent-brand-600"
+                />
+                <div className="mt-1 flex justify-between text-xs text-ink-muted">
+                  <span>3.0</span><span>4.0</span><span>5.0</span>
+                </div>
               </div>
-            </div>
+            )}
+
+            {(draft.schoolSystem === 'nis' || draft.schoolSystem === 'ib') && (
+              <DemoNote>
+                {L(
+                  'Балл переводится в пятибалльную шкалу, чтобы сравнение с требованиями вузов было честным. Это ориентировочный пересчёт: вуз делает собственный.',
+                  'Бал жоғары оқу орындарының талаптарымен әділ салыстыру үшін бес балдық шкалаға аударылады. Бұл — болжамды есеп, ЖОО өз есебін жасайды.',
+                )}
+              </DemoNote>
+            )}
 
             <fieldset>
-              <legend className="text-[15px] font-semibold">Сильные предметы</legend>
-              <span className="mt-0.5 block text-xs text-ink-muted">Отметь те, где стабильно хорошо.</span>
+              <legend className="text-[15px] font-semibold">{L('Сильные предметы', 'Күшті пәндер')}</legend>
+              <span className="mt-0.5 block text-xs text-ink-muted">
+                {L('Отметь те, где стабильно хорошо.', 'Тұрақты жақсы болатындарын белгіле.')}
+              </span>
               <div className="mt-2 flex flex-wrap gap-2">
                 {SUBJECTS.map((s) => {
                   const active = draft.strongSubjects.includes(s)
@@ -251,7 +482,9 @@ export function Survey() {
         {step.id === 'language' && (
           <>
             <fieldset>
-              <legend className="text-[15px] font-semibold">Языки обучения, которые тебе подходят</legend>
+              <legend className="text-[15px] font-semibold">
+                {L('Языки обучения, которые тебе подходят', 'Саған қолайлы оқу тілдері')}
+              </legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {LANGUAGES.map((l) => (
                   <Chip
@@ -266,8 +499,10 @@ export function Survey() {
             </fieldset>
 
             <fieldset>
-              <legend className="text-[15px] font-semibold">Уровень английского</legend>
-              <span className="mt-0.5 block text-xs text-ink-muted">Честная самооценка точнее, чем желаемая.</span>
+              <legend className="text-[15px] font-semibold">{L('Уровень английского', 'Ағылшын тілі деңгейі')}</legend>
+              <span className="mt-0.5 block text-xs text-ink-muted">
+                {L('Честная самооценка точнее, чем желаемая.', 'Шынайы өзін-өзі бағалау қалаған деңгейден дәлірек.')}
+              </span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {ENGLISH_LEVELS.map((e) => (
                   <Chip key={e.id} active={draft.english === e.id} hint={e.hint} onClick={() => patch({ english: e.id })}>
@@ -282,7 +517,7 @@ export function Survey() {
         {step.id === 'exams' && (
           <>
             <fieldset>
-              <legend className="text-[15px] font-semibold">Что планируешь сдавать</legend>
+              <legend className="text-[15px] font-semibold">{L('Что планируешь сдавать', 'Нені тапсыруды жоспарлайсың')}</legend>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {EXAMS.map((e) => (
                   <Chip
@@ -299,27 +534,103 @@ export function Survey() {
               </div>
             </fieldset>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2">
               <NumberField
-                label="ЕНТ" hint="0–140, если уже есть" placeholder="нет"
+                label="ЕНТ" hint={L('0–140, если уже есть', '0–140, егер бар болса')} placeholder={L('нет', 'жоқ')}
                 min={0} max={140} value={draft.exams.ent}
                 onChange={(v) => patch({ exams: { ...draft.exams, ent: v } })}
               />
               <NumberField
-                label="IELTS" hint="4.0–9.0" placeholder="нет"
+                label="IELTS" hint="4.0–9.0" placeholder={L('нет', 'жоқ')}
                 min={4} max={9} step={0.5} value={draft.exams.ielts}
                 onChange={(v) => patch({ exams: { ...draft.exams, ielts: v } })}
               />
               <NumberField
-                label="SAT" hint="400–1600" placeholder="нет"
+                label="TOEFL iBT" hint={L('0–120, засчитывается вместо IELTS', '0–120, IELTS орнына есептеледі')} placeholder={L('нет', 'жоқ')}
+                min={0} max={120} value={draft.exams.toefl}
+                onChange={(v) => patch({ exams: { ...draft.exams, toefl: v } })}
+              />
+              <NumberField
+                label="SAT" hint="400–1600" placeholder={L('нет', 'жоқ')}
                 min={400} max={1600} step={10} value={draft.exams.sat}
                 onChange={(v) => patch({ exams: { ...draft.exams, sat: v } })}
               />
             </div>
             <DemoNote>
-              Если баллов пока нет — ничего не заполняй. Оценка шансов станет осторожнее,
-              и это честнее, чем подставлять цифры.
+              {L(
+                'Если баллов пока нет — ничего не заполняй. Оценка шансов станет осторожнее, и это честнее, чем подставлять цифры.',
+                'Егер бал әлі жоқ болса — ештеңе толтырма. Мүмкіндік бағасы сақтырақ болады, бұл ойдан цифр қоюдан адалырақ.',
+              )}
             </DemoNote>
+          </>
+        )}
+
+        {step.id === 'achievements' && (
+          <>
+            {draft.achievements.length > 0 ? (
+              <ul className="space-y-2">
+                {draft.achievements.map((a) => (
+                  <Card as="li" key={a.id} className="flex items-start gap-3 p-3.5">
+                    <span aria-hidden className="mt-0.5 shrink-0 text-lg">{ACHIEVEMENT_KIND_EMOJI[a.kind]}</span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold leading-tight">{a.title}</p>
+                      <p className="mt-0.5 text-xs text-ink-muted">
+                        {achievementLabel(a)} · {a.year}
+                        {a.hours ? ` · ${a.hours} ч` : ''}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => patch({ achievements: draft.achievements.filter((x) => x.id !== a.id) })}
+                      aria-label={L(`Удалить: ${a.title}`, `Жою: ${a.title}`)}
+                      className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-line bg-surface text-ink-muted transition-colors hover:border-coral-100 hover:text-coral-600"
+                    >
+                      <span aria-hidden>✕</span>
+                    </button>
+                  </Card>
+                ))}
+              </ul>
+            ) : (
+              <Card className="p-4">
+                <p className="text-[15px] leading-relaxed text-ink-soft">
+                  {L(
+                    'Пока пусто. Считается всё: школьная олимпиада, кружок, свой проект, помощь в фонде, спортивный разряд. Приёмные комиссии за рубежом читают именно это, а не только аттестат.',
+                    'Әзірге бос. Бәрі есепке алынады: мектеп олимпиадасы, үйірме, өз жобаң, қордағы көмек, спорттық разряд. Шетелдегі қабылдау комиссиялары аттестатты ғана емес, дәл осыны оқиды.',
+                  )}
+                </p>
+              </Card>
+            )}
+
+            <AchievementForm
+              onAdd={(value) =>
+                patch({
+                  achievements: [
+                    ...draft.achievements,
+                    { ...value, id: `a-${Date.now()}-${Math.random().toString(36).slice(2, 7)}` },
+                  ],
+                })
+              }
+            />
+
+            {draft.achievements.length > 0 && (
+              <Card className="p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="label">{L('Сила профиля', 'Профиль күші')}</p>
+                  <Badge tone={achSummary.strength >= 0.5 ? 'mint' : 'sun'}>
+                    {Math.round(achSummary.strength * 100)}%
+                  </Badge>
+                </div>
+                <div className="mt-2">
+                  <Meter value={achSummary.strength * 100} tone={achSummary.strength >= 0.5 ? 'mint' : 'sun'} />
+                </div>
+                <p className="mt-2.5 text-sm leading-relaxed text-ink-soft">
+                  {L(
+                    'Это влияет только на вузы, которые читают заявку целиком. Там, где решает ЕНТ, портфолио почти не считается — и продукт этого не скрывает.',
+                    'Бұл өтінімді толық оқитын ЖОО-ларға ғана әсер етеді. ҰБТ шешетін жерде портфолио дерлік есепке алынбайды — өнім мұны жасырмайды.',
+                  )}
+                </p>
+              </Card>
+            )}
           </>
         )}
 
@@ -339,15 +650,21 @@ export function Survey() {
             </div>
             <Card className="flex items-center justify-between gap-4 p-4">
               <div className="min-w-0">
-                <p className="text-[15px] font-semibold">Готовность к переезду в другую страну</p>
+                <p className="text-[15px] font-semibold">
+                  {L('Готовность к переезду в другую страну', 'Басқа елге көшуге дайындық')}
+                </p>
                 <p className="mt-0.5 text-xs text-ink-muted">
-                  Если да, в подбор попадут и страны, которые не отмечены выше.
+                  {L(
+                    'Если да, в подбор попадут и страны, которые не отмечены выше.',
+                    'Иә болса, таңдауға жоғарыда белгіленбеген елдер де кіреді.',
+                  )}
                 </p>
               </div>
               <button
                 type="button"
                 role="switch"
                 aria-checked={draft.relocation}
+                aria-label={L('Готовность к переезду', 'Көшуге дайындық')}
                 onClick={() => patch({ relocation: !draft.relocation })}
                 className={`relative h-7 w-12 shrink-0 rounded-full transition-colors ${
                   draft.relocation ? 'bg-brand-600' : 'bg-line'
@@ -366,8 +683,10 @@ export function Survey() {
         {step.id === 'budget' && (
           <>
             <fieldset>
-              <legend className="text-[15px] font-semibold">Бюджет на обучение</legend>
-              <span className="mt-0.5 block text-xs text-ink-muted">Только плата за обучение, без проживания.</span>
+              <legend className="text-[15px] font-semibold">{L('Бюджет на обучение', 'Оқуға бюджет')}</legend>
+              <span className="mt-0.5 block text-xs text-ink-muted">
+                {L('Только плата за обучение, без проживания.', 'Тек оқу ақысы, тұрғын үйсіз.')}
+              </span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {BUDGETS.map((b) => (
                   <Chip key={b.id} active={draft.budget === b.id} hint={b.hint} onClick={() => patch({ budget: b.id })}>
@@ -378,8 +697,8 @@ export function Survey() {
             </fieldset>
 
             <fieldset>
-              <legend className="text-[15px] font-semibold">Что для тебя важнее всего</legend>
-              <span className="mt-0.5 block text-xs text-ink-muted">Можно выбрать несколько.</span>
+              <legend className="text-[15px] font-semibold">{L('Что для тебя важнее всего', 'Сен үшін не маңызды')}</legend>
+              <span className="mt-0.5 block text-xs text-ink-muted">{L('Можно выбрать несколько.', 'Бірнешеуін таңдауға болады.')}</span>
               <div className="mt-2 grid gap-2 sm:grid-cols-2">
                 {PRIORITIES.map((p) => (
                   <Chip
@@ -393,13 +712,27 @@ export function Survey() {
                 ))}
               </div>
             </fieldset>
+
+            <fieldset>
+              <legend className="text-[15px] font-semibold">{L('Как с тобой разговаривать', 'Сенімен қалай сөйлесу керек')}</legend>
+              <span className="mt-0.5 block text-xs text-ink-muted">
+                {L('Меняет тон подсказок и диагностики, но не сами рекомендации.', 'Кеңестер мен диагностика үнін өзгертеді, ұсыныстарды емес.')}
+              </span>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {TONES.map((t) => (
+                  <Chip key={t.id} active={draft.tone === t.id} hint={t.hint} onClick={() => patch({ tone: t.id })}>
+                    {t.emoji} {t.label}
+                  </Chip>
+                ))}
+              </div>
+            </fieldset>
           </>
         )}
       </div>
 
       {touched && !valid && step.error && (
         <p role="alert" className="mt-4 rounded-xl border border-coral-100 bg-coral-50 px-3.5 py-2.5 text-sm font-semibold text-coral-700">
-          {step.error}
+          {L(step.error, step.errorKk ?? step.error)}
         </p>
       )}
 
@@ -407,15 +740,19 @@ export function Survey() {
         <div className="flex gap-3">
           {index > 0 ? (
             <Button variant="secondary" size="lg" onClick={() => setIndex((i) => i - 1)}>
-              Назад
+              {L('Назад', 'Артқа')}
             </Button>
           ) : (
             <Button variant="secondary" size="lg" onClick={() => navigate('/')}>
-              На главную
+              {L('На главную', 'Басты бет')}
             </Button>
           )}
           <Button size="lg" full onClick={goNext}>
-            {isLast ? (completed ? 'Пересчитать маршрут' : 'Показать результат') : 'Дальше'}
+            {isLast
+              ? completed
+                ? L('Пересчитать маршрут', 'Маршрутты қайта есептеу')
+                : L('Показать результат', 'Нәтижені көрсету')
+              : L('Дальше', 'Әрі қарай')}
             <span aria-hidden>→</span>
           </Button>
         </div>
@@ -425,7 +762,7 @@ export function Survey() {
             onClick={() => { setProfile(draft); navigate('/matches') }}
             className="mt-2 w-full py-2 text-[13px] font-semibold text-ink-muted hover:text-brand-700"
           >
-            Сохранить изменения и вернуться к подбору
+            {L('Сохранить изменения и вернуться к подбору', 'Өзгерістерді сақтап, таңдауға оралу')}
           </button>
         )}
       </div>

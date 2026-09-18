@@ -1,48 +1,57 @@
+/**
+ * Палитра объявлена через CSS-переменные, а не фиксированными hex.
+ * Благодаря этому тёмная тема включается одним классом на <html>: значения
+ * переменных переопределяются в index.css, а все компоненты остаются без
+ * dark:-вариантов и не расходятся между собой.
+ */
+const token = (name) => `rgb(var(${name}) / <alpha-value>)`
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        paper: '#FBFAF8',
-        surface: '#FFFFFF',
+        paper: token('--c-paper'),
+        surface: token('--c-surface'),
         ink: {
-          DEFAULT: '#15171C',
-          soft: '#3F444E',
-          muted: '#767C8A',
+          DEFAULT: token('--c-ink'),
+          soft: token('--c-ink-soft'),
+          muted: token('--c-ink-muted'),
         },
-        line: '#E7E4DE',
+        line: token('--c-line'),
         brand: {
-          50: '#EEF0FF',
-          100: '#E0E3FF',
-          200: '#C6CBFF',
-          300: '#A3ABFF',
-          400: '#7C84F7',
-          500: '#5B5BE6',
-          600: '#4A45CE',
-          700: '#3B37A6',
-          900: '#221F63',
+          50: token('--c-brand-50'),
+          100: token('--c-brand-100'),
+          200: token('--c-brand-200'),
+          300: token('--c-brand-300'),
+          400: token('--c-brand-400'),
+          500: token('--c-brand-500'),
+          600: token('--c-brand-600'),
+          700: token('--c-brand-700'),
+          900: token('--c-brand-900'),
         },
         mint: {
-          50: '#E9F9F2',
-          100: '#CFF3E4',
-          500: '#12A87A',
-          600: '#0C8C64',
-          700: '#096B4D',
+          50: token('--c-mint-50'),
+          100: token('--c-mint-100'),
+          500: token('--c-mint-500'),
+          600: token('--c-mint-600'),
+          700: token('--c-mint-700'),
         },
         coral: {
-          50: '#FFF0F1',
-          100: '#FFDCDF',
-          500: '#EF5F6B',
-          600: '#D6404D',
-          700: '#A82B36',
+          50: token('--c-coral-50'),
+          100: token('--c-coral-100'),
+          500: token('--c-coral-500'),
+          600: token('--c-coral-600'),
+          700: token('--c-coral-700'),
         },
         sun: {
-          50: '#FFF6E5',
-          100: '#FFEAC2',
-          500: '#E39413',
-          600: '#BC7708',
-          700: '#8E5A06',
+          50: token('--c-sun-50'),
+          100: token('--c-sun-100'),
+          500: token('--c-sun-500'),
+          600: token('--c-sun-600'),
+          700: token('--c-sun-700'),
         },
       },
       fontFamily: {
@@ -54,8 +63,8 @@ export default {
         '3xl': '1.75rem',
       },
       boxShadow: {
-        card: '0 1px 2px rgba(21,23,28,0.04), 0 8px 24px -12px rgba(21,23,28,0.12)',
-        lift: '0 2px 4px rgba(21,23,28,0.05), 0 18px 40px -18px rgba(21,23,28,0.25)',
+        card: '0 1px 2px rgb(var(--c-shadow) / 0.04), 0 8px 24px -12px rgb(var(--c-shadow) / 0.12)',
+        lift: '0 2px 4px rgb(var(--c-shadow) / 0.05), 0 18px 40px -18px rgb(var(--c-shadow) / 0.25)',
       },
       keyframes: {
         'fade-up': {
