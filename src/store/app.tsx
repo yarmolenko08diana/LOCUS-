@@ -16,6 +16,9 @@ import { summarizeAchievements, type AchievementSummary } from '../engine/achiev
 import { L, setEngineLang } from '../i18n/lang'
 import { LangProvider } from '../i18n/LangContext'
 import { clear, load, save, type PersistedShape } from './storage'
+import { demoCase, type DemoCase } from '../data/demoCases'
+
+type DemoCaseId = DemoCase['id']
 
 export const EMPTY_PROFILE: Profile = {
   name: '',
@@ -36,51 +39,12 @@ export const EMPTY_PROFILE: Profile = {
   tone: 'friendly',
 }
 
-/** Готовый профиль для быстрого показа продукта жюри без заполнения анкеты. */
-export const DEMO_PROFILE: Profile = {
-  name: 'Аружан',
-  stage: 'grade11',
-  fields: ['it', 'science'],
-  schoolSystem: 'nis',
-  gpa: 4.6,
-  strongSubjects: ['Математика', 'Информатика', 'Английский'],
-  languages: ['kk', 'ru', 'en'],
-  english: 'b2',
-  exams: { ent: 112, nis: 88, planned: ['ent', 'ielts'] },
-  achievements: [
-    {
-      id: 'demo-1',
-      kind: 'olympiad',
-      level: 'national',
-      award: 'silver',
-      title: 'Республиканская олимпиада по информатике',
-      year: new Date().getFullYear(),
-    },
-    {
-      id: 'demo-2',
-      kind: 'hackathon',
-      level: 'city',
-      award: 'gold',
-      title: 'Городской хакатон по анализу данных',
-      year: new Date().getFullYear(),
-    },
-    {
-      id: 'demo-3',
-      kind: 'volunteer',
-      level: 'school',
-      award: 'participant',
-      title: 'Кружок программирования для младших классов',
-      year: new Date().getFullYear() - 1,
-      hours: 60,
-    },
-  ],
-  countries: ['KZ', 'TR', 'CZ'],
-  relocation: true,
-  budget: 'upto6k',
-  intakeYear: new Date().getFullYear() + 1,
-  priorities: ['cost', 'employability'],
-  tone: 'friendly',
-}
+/**
+ * Готовый профиль для быстрого показа продукта без заполнения анкеты.
+ * Средний случай — то, с чем приходит большинство: он и остаётся профилем
+ * по умолчанию, а рядом лежат сильный и слабый сценарии.
+ */
+export const DEMO_PROFILE: Profile = demoCase('medium').profile
 
 export interface ChangeNote {
   id: number
@@ -111,7 +75,7 @@ interface AppState {
   addAchievement: (value: Omit<Achievement, 'id'>) => void
   removeAchievement: (id: string) => void
   completeSurvey: (profile: Profile) => void
-  loadDemo: () => void
+  loadDemo: (id?: DemoCaseId) => void
   toggleDone: (id: string) => void
   toggleSaved: (id: string) => void
   toggleCompare: (id: string) => void
@@ -304,8 +268,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCompleted(true)
   }, [])
 
-  const loadDemo = useCallback(() => {
-    setProfileState(DEMO_PROFILE)
+  const loadDemo = useCallback((id: DemoCaseId = 'medium') => {
+    setProfileState(demoCase(id).profile)
     setCompleted(true)
     setDone([])
     setCompare([])

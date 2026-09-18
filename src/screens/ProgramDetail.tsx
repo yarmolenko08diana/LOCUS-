@@ -4,6 +4,7 @@ import { CHANCE_META, chanceLabel, money, tuitionLabel } from '../components/Pro
 import { useApp } from '../store/app'
 import { useL } from '../i18n/LangContext'
 import { COUNTRY_FLAG, COUNTRY_LABEL, LANGUAGE_LABEL } from '../data/taxonomy'
+import { countryNote } from '../data/countryNotes'
 import { WEIGHTS, WEIGHT_LABEL, scoreLabel } from '../engine/match'
 import type { ReasonTone, ScoreBreakdown } from '../types'
 
@@ -43,6 +44,7 @@ export function ProgramDetail() {
   const { program: p, chance } = rec
   const chanceMeta = CHANCE_META[chance.level]
   const keys = Object.keys(rec.breakdown) as (keyof ScoreBreakdown)[]
+  const note = countryNote(p.country)
 
   return (
     <div className="animate-fade-up space-y-6">
@@ -263,6 +265,29 @@ export function ProgramDetail() {
           </DemoNote>
         </Card>
       </div>
+
+      {note && (
+        <Card className="p-5">
+          <h2 className="text-[17px] font-bold">
+            {L('Зачем эта страна', 'Бұл ел не үшін')}: {COUNTRY_FLAG[p.country]} {COUNTRY_LABEL[p.country]}
+          </h2>
+          <p className="mt-1.5 text-[14px] font-bold text-brand-600">{L(note.angle, note.angleKk)}</p>
+          <ul className="mt-3 space-y-2.5">
+            {note.facts.map((f) => (
+              <li key={f.ru} className="flex gap-2.5 text-[14px] leading-relaxed text-ink-soft">
+                <span aria-hidden className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-mint-400" />
+                <span>{L(f.ru, f.kk)}</span>
+              </li>
+            ))}
+          </ul>
+          <DemoNote className="mt-3">
+            {L('Условия по стране меняются. Сверяйте на официальном портале:', 'Ел бойынша шарттар өзгереді. Ресми порталда тексеріңіз:')}{' '}
+            <a href={note.source.url} target="_blank" rel="noreferrer noopener" className="font-semibold underline underline-offset-2">
+              {note.source.label} ↗
+            </a>
+          </DemoNote>
+        </Card>
+      )}
 
       <Card className="p-5">
         <h2 className="text-[17px] font-bold">{L('Что даёт программа', 'Бағдарлама не береді')}</h2>

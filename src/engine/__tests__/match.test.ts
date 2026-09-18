@@ -79,8 +79,8 @@ describe('движок подбора', () => {
   })
 
   it('оценивает шансы ниже, когда баллов не хватает', () => {
-    const strong = scoreProgram(p({ exams: { ent: 130, planned: ['ent'] }, gpa: 5 }), PROGRAMS.find((x) => x.id === 'kz-astanait-ai')!)
-    const weak = scoreProgram(p({ exams: { ent: 40, planned: ['ent'] }, gpa: 3.2 }), PROGRAMS.find((x) => x.id === 'kz-astanait-ai')!)
+    const strong = scoreProgram(p({ exams: { ent: 130, planned: ['ent'] }, gpa: 5 }), PROGRAMS.find((x) => x.id === 'kz-aitu-se')!)
+    const weak = scoreProgram(p({ exams: { ent: 40, planned: ['ent'] }, gpa: 3.2 }), PROGRAMS.find((x) => x.id === 'kz-aitu-se')!)
     const order = { high: 0, medium: 1, unknown: 2, low: 3 }
     expect(order[strong.chance.level]).toBeLessThan(order[weak.chance.level])
   })

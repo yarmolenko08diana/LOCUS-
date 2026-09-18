@@ -86,6 +86,10 @@ export const COUNTRIES_RAW: {
   { code: 'SG', label: 'Сингапур', labelKk: 'Сингапур', flag: '🇸🇬', hint: 'MOE Tuition Grant, сильные вузы', hintKk: 'MOE Tuition Grant, күшті ЖОО' },
   { code: 'HK', label: 'Гонконг (Китай)', labelKk: 'Гонконг (Қытай)', flag: '🇭🇰', hint: 'английский, стипендии вузов', hintKk: 'ағылшын тілі, ЖОО шәкіртақылары' },
   { code: 'GE', label: 'Грузия', labelKk: 'Грузия', flag: '🇬🇪', hint: 'безвизовый въезд, недорого', hintKk: 'визасыз кіру, арзан' },
+  { code: 'CA', label: 'Канада', labelKk: 'Канада', flag: '🇨🇦', hint: 'работа после выпуска до 3 лет', hintKk: 'бітіргеннен кейін 3 жылға дейін жұмыс' },
+  { code: 'AT', label: 'Австрия', labelKk: 'Австрия', flag: '🇦🇹', hint: '≈€1 500 в год в госвузах', hintKk: 'мемлекеттік ЖОО-да жылына ≈€1 500' },
+  { code: 'FR', label: 'Франция', labelKk: 'Франция', flag: '🇫🇷', hint: 'субсидии и жилищная помощь CAF', hintKk: 'субсидиялар және CAF тұрғын үй көмегі' },
+  { code: 'ES', label: 'Испания', labelKk: 'Испания', flag: '🇪🇸', hint: 'можно работать 30 часов в неделю', hintKk: 'аптасына 30 сағат жұмыс істеуге болады' },
 ]
 
 export const COUNTRY_LABEL = labelMap<CountryCode, (typeof COUNTRIES_RAW)[number]>(COUNTRIES_RAW)
@@ -104,6 +108,8 @@ export const LANGUAGES_RAW: { code: LanguageCode; label: string; labelKk: string
   { code: 'cs', label: 'Чешский', labelKk: 'Чех тілі' },
   { code: 'pl', label: 'Польский', labelKk: 'Поляк тілі' },
   { code: 'hu', label: 'Венгерский', labelKk: 'Венгр тілі' },
+  { code: 'fr', label: 'Французский', labelKk: 'Француз тілі' },
+  { code: 'es', label: 'Испанский', labelKk: 'Испан тілі' },
   { code: 'it', label: 'Итальянский', labelKk: 'Итальян тілі' },
   { code: 'zh', label: 'Китайский', labelKk: 'Қытай тілі' },
   { code: 'ko', label: 'Корейский', labelKk: 'Корей тілі' },

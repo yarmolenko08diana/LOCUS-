@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, Card, DemoNote } from '../components/ui'
+import { Badge, Button, Card, DemoNote } from '../components/ui'
 import { AppSoonBadge } from '../components/Controls'
 import { STEPS } from '../components/Journey'
 import { useApp } from '../store/app'
@@ -7,6 +7,7 @@ import { useL } from '../i18n/LangContext'
 import { PROGRAMS } from '../data/programs'
 import { SCHOLARSHIPS } from '../data/scholarships'
 import { COUNTRIES_RAW } from '../data/taxonomy'
+import { DEMO_CASES } from '../data/demoCases'
 import { WEIGHTS } from '../engine/match'
 
 const RESULT = [
@@ -32,6 +33,9 @@ const RESULT = [
     textKk: 'Емтихандар, құжаттар, шәкіртақылар, мерзімдер және белсенділік — бір ерекшеленген келесі қадаммен.',
   },
 ]
+
+/** Цвет подписи случая: та же шкала, что у оценки шансов. */
+const CASE_TONE = { high: 'mint', medium: 'brand', low: 'coral' } as const
 
 export function Welcome() {
   const { completed, loadDemo } = useApp()
@@ -64,13 +68,6 @@ export function Welcome() {
             {completed ? L('Продолжить маршрут', 'Маршрутты жалғастыру') : L('Начать анкету', 'Сауалнаманы бастау')}
             <span aria-hidden>→</span>
           </Button>
-          <Button
-            size="lg"
-            variant="secondary"
-            onClick={() => { loadDemo(); navigate('/diagnosis') }}
-          >
-            {L('Посмотреть на готовом примере', 'Дайын мысалмен көру')}
-          </Button>
         </div>
         <p className="mt-3 text-[13px] text-ink-muted">
           {L(
@@ -78,6 +75,34 @@ export function Welcome() {
             'Тіркелусіз. Жауаптар тек сенің браузеріңде сақталады.',
           )}
         </p>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="text-sm font-bold uppercase tracking-[0.08em] text-ink-muted">
+          {L('Три готовых примера', 'Үш дайын мысал')}
+        </h2>
+        <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-ink-soft">
+          {L(
+            'Профили отличаются баллами, языком, бюджетом и достижениями. Открой любой, чтобы увидеть, как из-за этого меняются рекомендации, оценка шансов и план.',
+            'Профильдер баллмен, тілмен, бюджетпен және жетістіктермен ерекшеленеді. Кез келгенін ашып, осыдан ұсыныстар, мүмкіндік бағасы мен жоспар қалай өзгеретінін көр.',
+          )}
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+          {DEMO_CASES.map((c) => (
+            <Card key={c.id} className="flex flex-col p-5">
+              <Badge tone={CASE_TONE[c.id]} className="self-start">{L(c.title, c.titleKk)}</Badge>
+              <p className="mt-3 text-[14px] font-bold leading-snug">{L(c.summary, c.summaryKk)}</p>
+              <p className="mt-2 flex-1 text-[13px] leading-relaxed text-ink-muted">{L(c.driver, c.driverKk)}</p>
+              <Button
+                variant="secondary"
+                className="mt-4 w-full"
+                onClick={() => { loadDemo(c.id); navigate('/diagnosis') }}
+              >
+                {L('Открыть пример', 'Мысалды ашу')}
+              </Button>
+            </Card>
+          ))}
+        </div>
       </section>
 
       <section className="mt-12">

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import type { ChanceLevel, Recommendation } from '../types'
 import { Badge, Card, Meter } from './ui'
 import { COUNTRY_FLAG, COUNTRY_LABEL } from '../data/taxonomy'
+import { countryAngle } from '../data/countryNotes'
 import { scoreLabel } from '../engine/match'
 import { useL } from '../i18n/LangContext'
 import { L } from '../i18n/lang'
@@ -45,6 +46,9 @@ export function ProgramCard({
   const { program: p } = rec
   const Lc = useL()
   const chance = CHANCE_META[rec.chance.level]
+  // Строка «зачем эта страна» читается на языке интерфейса, поэтому берётся
+  // при отрисовке, а не один раз на уровне модуля.
+  const angle = countryAngle(p.country)
 
   return (
     <Card as="article" className="overflow-hidden transition-shadow hover:shadow-lift">
@@ -61,6 +65,7 @@ export function ProgramCard({
                 {COUNTRY_FLAG[p.country]} {COUNTRY_LABEL[p.country]}, {p.city}
               </span>
             </div>
+            {angle && <p className="mt-1 text-[12.5px] font-semibold text-mint-600">{angle}</p>}
             <h2 className="mt-2 text-[19px] font-extrabold leading-snug tracking-[-0.01em]">
               <Link to={`/program/${p.id}`} className="-my-1 inline-block py-1 hover:text-brand-700">
                 {p.program}

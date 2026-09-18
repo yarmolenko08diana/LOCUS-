@@ -18,10 +18,10 @@ import { holisticFactor, summarizeAchievements, type AchievementSummary } from '
 export const WEIGHTS = {
   field: 26,
   admission: 20,
-  budget: 18,
-  geo: 11,
+  budget: 17,
+  geo: 13,
   language: 9,
-  priority: 7,
+  priority: 6,
   profile: 9,
 } as const
 
@@ -317,7 +317,9 @@ function profileStrengthScore(program: Program, ach: AchievementSummary): number
 }
 
 function budgetScore(profile: Profile, program: Program): number {
-  const max = BUDGET_MAX[profile.budget]
+  // Подстраховка: неизвестный бюджет не должен превращать балл в NaN и ломать
+  // сортировку всей выдачи — в таком случае считаем бюджет самым широким.
+  const max = BUDGET_MAX[profile.budget] ?? BUDGET_MAX.above15k
   const tuition = program.tuitionUsd[0]
   if (profile.budget === 'grant-only') {
     if (tuition === 0) return 1
@@ -334,6 +336,14 @@ function budgetScore(profile: Profile, program: Program): number {
 function geoScore(profile: Profile, program: Program): number {
   if (profile.countries.includes(program.country)) return 1
   if (!profile.relocation) return program.country === 'KZ' ? 0.9 : 0.04
+  // База выросла до нескольких сотен программ, и без этого названные страны
+  // тонули в общем потоке: человек выбирал Британию, а видел только Казахстан.
+  // Страна, которую человек назвал сам, должна заметно опережать остальные,
+  // но Казахстан остаётся видимым как запасной вариант рядом с домом.
+  if (profile.countries.length > 0) {
+    if (program.country === 'KZ') return 0.34
+    return NEAR_COUNTRIES.has(program.country) ? 0.2 : 0.12
+  }
   return NEAR_COUNTRIES.has(program.country) ? 0.42 : 0.3
 }
 

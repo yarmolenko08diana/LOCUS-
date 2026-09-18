@@ -73,8 +73,12 @@ describe('достижения меняют результат', () => {
     const without = recommend(base)
     const withAch = recommend(p({ achievements: [ach(), ach({ id: 'a2', kind: 'hackathon', level: 'international', award: 'finalist' })] }))
 
-    const holisticBefore = without.slice(0, 5).filter((r) => r.program.holistic >= 4).length
-    const holisticAfter = withAch.slice(0, 5).filter((r) => r.program.holistic >= 4).length
+    // Окно шире пятёрки: база выросла до нескольких сотен программ, и у профиля
+    // с жёстким бюджетом первые места занимают дешёвые программы своей страны.
+    // Достижения должны поднимать вузы, которые читают заявку целиком, — это и
+    // проверяем по верхней десятке.
+    const holisticBefore = without.slice(0, 10).filter((r) => r.program.holistic >= 4).length
+    const holisticAfter = withAch.slice(0, 10).filter((r) => r.program.holistic >= 4).length
     expect(holisticAfter).toBeGreaterThan(holisticBefore)
   })
 

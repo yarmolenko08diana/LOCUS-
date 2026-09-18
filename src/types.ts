@@ -8,6 +8,7 @@ export type CountryCode =
   | 'KZ' | 'RU' | 'TR' | 'CZ' | 'PL' | 'HU' | 'DE' | 'NL' | 'IT'
   | 'GB' | 'US' | 'AE' | 'CN' | 'KR' | 'MY'
   | 'JP' | 'SG' | 'HK' | 'GE'
+  | 'CA' | 'AT' | 'FR' | 'ES'
 
 export type FieldId =
   | 'it' | 'engineering' | 'medicine' | 'business' | 'economics'
@@ -16,6 +17,7 @@ export type FieldId =
 export type LanguageCode =
   | 'kk' | 'ru' | 'en' | 'tr' | 'de'
   | 'cs' | 'pl' | 'hu' | 'it' | 'zh' | 'ko' | 'ja' | 'ka'
+  | 'fr' | 'es'
 
 export type EnglishLevel = 'none' | 'a2' | 'b1' | 'b2' | 'c1'
 
