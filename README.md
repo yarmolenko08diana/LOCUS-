@@ -11,8 +11,7 @@
 и study plan, рекомендации по активностям.
 
 - **Демо:** https://locus-hackathon-psi.vercel.app/
-- **Код:** https://github.com/yarmolenko08diana/LOCUS-
-- **Вход не требуется.** Все данные хранятся в браузере пользователя.
+- **Код:** https://github.com/yarmolenko08diana/LOCUS-HACKATHON
 - **Языки:** қазақша и русский. **Темы:** светлая, тёмная, как в системе.
 
 ---
