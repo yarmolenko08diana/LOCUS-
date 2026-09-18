@@ -25,19 +25,27 @@ function TaskRow({
         done ? 'opacity-55' : isNext ? 'bg-brand-50/40' : ''
       }`}
     >
+      {/* Кнопка шире круга: видимый кружок 24px, зона нажатия 40px. */}
       <button
         type="button"
         onClick={onToggle}
         role="checkbox"
         aria-checked={done}
         aria-label={done ? `Снять отметку: ${task.title}` : `Отметить выполненным: ${task.title}`}
-        className={`-m-2 mt-[-6px] box-content grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 bg-clip-padding p-2 transition-all active:scale-90 ${
-          done ? 'border-mint-500 bg-mint-500 text-white' : 'border-line bg-surface text-transparent hover:border-brand-400'
-        }`}
+        className="group/check -m-2 grid h-10 w-10 shrink-0 place-items-center rounded-full"
       >
-        <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4">
-          <path d="M2.5 6.2 4.8 8.5 9.5 3.8" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
+        <span
+          aria-hidden
+          className={`grid h-6 w-6 place-items-center rounded-full border-2 transition-all group-active/check:scale-90 ${
+            done
+              ? 'border-mint-500 bg-mint-500 text-white'
+              : 'border-line bg-surface text-transparent group-hover/check:border-brand-400'
+          }`}
+        >
+          <svg viewBox="0 0 12 12" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.4">
+            <path d="M2.5 6.2 4.8 8.5 9.5 3.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
       </button>
 
       <div className="min-w-0 flex-1">
