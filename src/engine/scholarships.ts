@@ -187,9 +187,23 @@ function scoreScholarship(
   }
 }
 
+/**
+ * Направление у стипендии — жёсткий фильтр, а не ещё один критерий.
+ *
+ * Стипендия за творческое портфолио не станет доступнее оттого, что страна и
+ * этап обучения совпали: человеку с одним IT в анкете её просто не дадут.
+ * Раньше такие стипендии проходили порог за счёт остальных пунктов и
+ * попадали в выдачу с пометкой «направления не совпадают» — это шум.
+ */
+function fieldsAllow(profile: Profile, s: Scholarship): boolean {
+  if (s.fields.length === 0) return true
+  return s.fields.some((f) => profile.fields.includes(f))
+}
+
 export function matchScholarships(profile: Profile): ScholarshipMatch[] {
   const ach = summarizeAchievements(profile)
-  return SCHOLARSHIPS.map((s) => scoreScholarship(profile, s, ach))
+  return SCHOLARSHIPS.filter((s) => fieldsAllow(profile, s))
+    .map((s) => scoreScholarship(profile, s, ach))
     .filter((m) => m.score >= 35)
     .sort((a, b) => b.score - a.score)
 }

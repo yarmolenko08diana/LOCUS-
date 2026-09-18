@@ -53,11 +53,13 @@ export interface ExamState {
   ib?: number
   /** Итоговый средний балл НИШ по 100-балльной шкале. */
   nis?: number
+  /** CSCA: вступительный экзамен для иностранцев в вузы Китая, 0–100 за предмет. */
+  csca?: number
   /** Экзамены, которые пользователь готов сдать, даже если баллов пока нет. */
   planned: ExamId[]
 }
 
-export type ExamId = 'ent' | 'ielts' | 'sat' | 'toefl' | 'localExam' | 'portfolio' | 'ib'
+export type ExamId = 'ent' | 'ielts' | 'sat' | 'toefl' | 'localExam' | 'portfolio' | 'ib' | 'csca'
 
 /** Виды академических и внеучебных достижений. */
 export type AchievementKind =
@@ -80,8 +82,9 @@ export type AchievementAward = 'participant' | 'finalist' | 'bronze' | 'silver' 
 export type AchievementForm =
   | 'subject' | 'team' | 'tournament'
   | 'schoolWork' | 'conference' | 'article' | 'labProject' | 'patent'
-  | 'hackathon' | 'ctf' | 'competitiveProgramming'
-  | 'caseChampionship' | 'debate' | 'robotics' | 'creativeContest'
+  | 'hackathonClassic' | 'hackathonOnline' | 'hackathonCorporate' | 'hackathonThematic' | 'ctf'
+  | 'competitiveProgramming' | 'researchContest' | 'caseChampionship' | 'startupPitch'
+  | 'debate' | 'robotics' | 'creativeContest'
   | 'app' | 'venture' | 'nonprofit' | 'mediaProject'
   | 'onlineCourse' | 'summerSchool' | 'universityProgram'
   | 'regularService' | 'oneOffAction' | 'ownInitiative'
@@ -205,6 +208,13 @@ export interface Scholarship {
   startMonth?: number
   endMonth?: number
   stages: Stage[]
+  /**
+   * Честное предупреждение о конкурсе: сколько мест реально достаётся
+   * казахстанцам. Без этого стипендия с квотой в несколько человек в год
+   * читается как обычный вариант, и на неё строят весь план.
+   */
+  competition?: string
+  competitionKk?: string
   source: { label: string; url: string }
 }
 

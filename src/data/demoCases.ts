@@ -47,7 +47,7 @@ export const DEMO_CASES: DemoCase[] = [
       achievements: [
         { id: 'high-1', kind: 'olympiad', form: 'subject', level: 'international', award: 'silver', title: 'Международная олимпиада по информатике', year },
         { id: 'high-2', kind: 'research', form: 'labProject', level: 'national', award: 'gold', title: 'Республиканский конкурс научных проектов', year: year - 1 },
-        { id: 'high-3', kind: 'hackathon', form: 'hackathon', level: 'national', award: 'finalist', title: 'Финал республиканского хакатона', year },
+        { id: 'high-3', kind: 'hackathon', form: 'hackathonClassic', level: 'national', award: 'finalist', title: 'Финал республиканского хакатона', year },
         { id: 'high-4', kind: 'leadership', form: 'studentCouncil', level: 'school', award: 'participant', title: 'Президент школьного совета', year, hours: 120 },
       ],
       countries: ['KZ', 'SG', 'GB', 'HK'],

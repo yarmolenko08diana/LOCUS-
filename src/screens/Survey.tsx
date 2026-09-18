@@ -4,11 +4,13 @@ import { Badge, Button, Card, Chip, DemoNote, Meter } from '../components/ui'
 import { useApp } from '../store/app'
 import { useL } from '../i18n/LangContext'
 import {
-  ACHIEVEMENT_KIND_EMOJI, achievementAwards, achievementForms, achievementKinds, achievementLevels,
+  ACHIEVEMENT_KIND_EMOJI, achievementAwards, achievementExample, achievementForms,
+  achievementKinds, achievementLevels,
   budgets, countries, englishLevels, exams, fields, languages, priorities,
   schoolSystems, stages, subjects, tones,
 } from '../data/taxonomy'
 import { achievementLabel, summarizeAchievements } from '../engine/achievements'
+import { cscaPlan } from '../engine/csca'
 import type {
   Achievement, AchievementAward, AchievementForm, AchievementKind, AchievementLevel, ExamId, Profile,
 } from '../types'
@@ -151,13 +153,19 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
   const canAdd = title.trim().length >= 3
   // Виды зависят от типа, поэтому при смене типа выбранный вид сбрасывается.
   const forms = achievementForms(kind)
+  const formHint = forms.find((f) => f.id === form)?.hint
 
   return (
     <Card className="p-4">
       <p className="label mb-2.5">{L('Добавить достижение', 'Жетістік қосу')}</p>
 
-      <div className="no-scrollbar -mx-1 overflow-x-auto px-1">
-        <div className="flex min-w-max gap-1.5 pb-1">
+      {/*
+        Раньше типы лежали в горизонтальной ленте со скрытой полосой прокрутки:
+        с мышью до дальних типов было не добраться, и не было видно, что они есть.
+        Теперь все одиннадцать просто переносятся по строкам.
+      */}
+      <div>
+        <div className="flex flex-wrap gap-1.5">
           {achievementKinds().map((k) => (
             <button
               key={k.id}
@@ -182,7 +190,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
         <input
           type="text"
           value={title}
-          placeholder={L('Например: областная олимпиада по физике', 'Мысалы: физикадан облыстық олимпиада')}
+          placeholder={achievementExample(kind)}
           onChange={(e) => setTitle(e.target.value)}
           className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-[15px] transition-colors placeholder:text-ink-muted focus:border-brand-400"
         />
@@ -201,6 +209,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
               <option key={f.id} value={f.id}>{f.label}</option>
             ))}
           </select>
+          {formHint && <span className="mt-1 block text-[12.5px] leading-relaxed text-ink-muted">{formHint}</span>}
         </label>
         <label className="block">
           <span className="text-sm font-semibold">{L('Масштаб', 'Деңгейі')}</span>
@@ -209,7 +218,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
             onChange={(e) => setLevel(e.target.value as AchievementLevel)}
             className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3 text-[15px] focus:border-brand-400"
           >
-            {achievementLevels().map((l) => (
+            {achievementLevels(kind).map((l) => (
               <option key={l.id} value={l.id}>{l.label}</option>
             ))}
           </select>
@@ -285,6 +294,10 @@ export function Survey() {
   const [draft, setDraft] = useState<Profile>(profile)
   const [index, setIndex] = useState(0)
   const [touched, setTouched] = useState(false)
+
+  // Набор предметов CSCA пересобирается на лету: он зависит от направления
+  // и от языков в анкете, а их правят на соседних шагах.
+  const csca = useMemo(() => cscaPlan(draft), [draft])
 
   const step = STEP_DEFS[index]
   const isLast = index === STEP_DEFS.length - 1
@@ -577,6 +590,29 @@ export function Survey() {
                 onChange={(v) => patch({ exams: { ...draft.exams, sat: v } })}
               />
             </div>
+            {csca.subjects.length > 0 && (draft.exams.planned.includes('csca') || csca.relevant) && (
+              <Card className="p-4">
+                <p className="label mb-1">{L('Что сдавать на CSCA', 'CSCA-да не тапсырасың')}</p>
+                <p className="text-[13.5px] leading-relaxed text-ink-soft">{csca.trackNote}</p>
+                <ul className="mt-3 space-y-2.5">
+                  {csca.subjects.map((sub) => (
+                    <li key={sub.id} className="border-t border-line pt-2.5 first:border-t-0 first:pt-0">
+                      <p className="text-[14px] font-bold">
+                        {L(sub.title, sub.titleKk)} <span className="font-normal text-ink-muted">{sub.original}</span>
+                      </p>
+                      <p className="mt-0.5 text-[13px] leading-relaxed text-ink-muted">{L(sub.why, sub.whyKk)}</p>
+                    </li>
+                  ))}
+                </ul>
+                <DemoNote className="mt-3">
+                  {L('Состав предметов зависит от вуза и программы. Сверяйте на ', 'Пәндер құрамы ЖОО мен бағдарламаға байланысты. Тексеріңіз: ')}
+                  <a href={csca.source.url} target="_blank" rel="noreferrer noopener" className="font-semibold underline underline-offset-2">
+                    {csca.source.label} ↗
+                  </a>
+                </DemoNote>
+              </Card>
+            )}
+
             <DemoNote>
               {L(
                 'Если баллов пока нет — ничего не заполняй. Оценка шансов станет осторожнее, и это честнее, чем подставлять цифры.',

@@ -8,7 +8,8 @@ import { effectiveGpa } from './academics'
 import { summarizeAchievements } from './achievements'
 import { suggestActivities } from './activities'
 import { matchScholarships } from './scholarships'
-import { softLower } from '../lib/text'
+import { cscaPlan } from './csca'
+import { listOf, softLower } from '../lib/text'
 import { L } from '../i18n/lang'
 
 /**
@@ -89,6 +90,32 @@ export function buildRoadmap(profile: Profile, recs: Recommendation[]): RoadmapP
       window: L('ближайшие 2 недели', 'алдағы 2 апта'),
       effort: L('3 часа', '3 сағат'),
       source: { label: 'ielts.org — sample tests', url: 'https://www.ielts.org/for-test-takers/sample-test-questions' },
+    })
+  }
+
+  // CSCA нужен только тем, кто целится в Китай, и набор предметов у каждого свой,
+  // поэтому шаг называет их поимённо, а не отправляет «узнать требования».
+  const csca = cscaPlan(profile)
+  // Условие — Китай в выбранных странах, а не в топе выдачи: экзамен нужно
+  // готовить заранее, а топ может меняться от правки бюджета или языка,
+  // и шаг бы то появлялся, то исчезал.
+  if (csca.relevant) {
+    const list = csca.subjects.map((sub) => L(sub.short, sub.shortKk))
+    add({
+      id: 'csca-plan',
+      title: L(
+        `Начать подготовку к CSCA: ${listOf(list)}`,
+        `CSCA-ға дайындықты бастау: ${listOf(list)}`,
+      ),
+      why: L(
+        `Это вступительный экзамен вузов Китая для иностранцев. Набор предметов собран под твоё направление и язык обучения. ${csca.trackNote}`,
+        `Бұл — Қытай ЖОО-ларының шетелдіктерге арналған кіру емтиханы. Пәндер жинағы бағытың мен оқу тіліңе қарай құрылған. ${csca.trackNote}`,
+      ),
+      category: 'exam',
+      phase: 'soon',
+      window: L('ближайшие 2 месяца', 'алдағы 2 ай'),
+      effort: L('по 3–4 часа в неделю', 'аптасына 3–4 сағаттан'),
+      source: csca.source,
     })
   }
 

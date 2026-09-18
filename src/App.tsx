@@ -13,6 +13,7 @@ import { Scholarships } from './screens/Scholarships'
 import { Calendar } from './screens/Calendar'
 import { Activities } from './screens/Activities'
 import { Saved } from './screens/Saved'
+import { Account } from './screens/Account'
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
               <Route path="/calendar" element={<Calendar />} />
               <Route path="/activities" element={<Activities />} />
               <Route path="/saved" element={<Saved />} />
+              <Route path="/account" element={<Account />} />
               <Route path="/program/:id" element={<ProgramDetail />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

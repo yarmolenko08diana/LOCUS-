@@ -5,6 +5,7 @@ import { useL } from '../i18n/LangContext'
 import { EXTRAS, STEPS, stepIndexForPath } from './Journey'
 import { ChangeToast } from './ChangeToast'
 import { AppSoonBadge, LangToggle, ThemeToggle } from './Controls'
+import { initials } from '../store/account'
 
 function Logo() {
   const L = useL()
@@ -150,6 +151,27 @@ function ExtraRail() {
   )
 }
 
+/** Вход в аккаунт в шапке: аватар, если человек вошёл, иначе иконка. */
+function AccountButton() {
+  const L = useL()
+  const { account } = useApp()
+  return (
+    <Link
+      to="/account"
+      aria-label={account ? L('Твой профиль', 'Сенің профилің') : L('Вход в Qadam', 'Qadam-ға кіру')}
+      className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-line bg-surface text-[13px] font-bold text-ink-soft transition-colors hover:border-brand-300 hover:text-brand-700"
+    >
+      {account?.avatar ? (
+        <img src={account.avatar} alt="" className="h-full w-full rounded-lg object-cover" />
+      ) : account ? (
+        initials(account)
+      ) : (
+        <span aria-hidden>👤</span>
+      )}
+    </Link>
+  )
+}
+
 export function Shell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation()
   const L = useL()
@@ -180,6 +202,7 @@ export function Shell({ children }: { children: ReactNode }) {
             )}
             <LangToggle />
             <ThemeToggle />
+            <AccountButton />
             {completed && !isLanding && (
               <Link
                 to="/survey"

@@ -194,6 +194,7 @@ export const EXAMS_RAW: { id: ExamId; label: string; labelKk: string; hint: stri
   { id: 'localExam', label: 'Экзамен вуза', labelKk: 'ЖОО емтиханы', hint: 'внутренний экзамен или собеседование', hintKk: 'ішкі емтихан немесе сұхбат' },
   { id: 'portfolio', label: 'Портфолио', labelKk: 'Портфолио', hint: 'дизайн, архитектура, медиа', hintKk: 'дизайн, сәулет, медиа' },
   { id: 'ib', label: 'IB Diploma', labelKk: 'IB дипломы', hint: 'международный диплом, принимают напрямую', hintKk: 'халықаралық диплом, тікелей қабылданады' },
+  { id: 'csca', label: 'CSCA', labelKk: 'CSCA', hint: 'вступительный экзамен вузов Китая для иностранцев', hintKk: 'Қытай ЖОО-ларының шетелдіктерге арналған емтиханы' },
 ]
 
 export const EXAM_LABEL = labelMap<ExamId, (typeof EXAMS_RAW)[number]>(EXAMS_RAW)
@@ -250,19 +251,38 @@ export function schoolSystems() { return localize(SCHOOL_SYSTEMS_RAW) }
 
 export const ACHIEVEMENT_KINDS_RAW: {
   id: AchievementKind; label: string; labelKk: string; hint: string; hintKk: string; emoji: string
+  /** Пример названия для подсказки в поле ввода: у каждого типа свой. */
+  example: string; exampleKk: string
 }[] = [
-  { id: 'olympiad', label: 'Олимпиада', labelKk: 'Олимпиада', emoji: '🥇', hint: 'предметная олимпиада или турнир', hintKk: 'пәндік олимпиада немесе турнир' },
-  { id: 'research', label: 'Исследование', labelKk: 'Зерттеу', emoji: '🔬', hint: 'научный проект, статья, конференция', hintKk: 'ғылыми жоба, мақала, конференция' },
-  { id: 'hackathon', label: 'Хакатон', labelKk: 'Хакатон', emoji: '💻', hint: 'командная разработка за выходные', hintKk: 'демалыс күндеріндегі командалық әзірлеу' },
-  { id: 'contest', label: 'Конкурс или соревнование', labelKk: 'Байқау немесе жарыс', emoji: '🏆', hint: 'кейс-чемпионат, дебаты, робототехника', hintKk: 'кейс-чемпионат, дебат, робототехника' },
-  { id: 'project', label: 'Свой проект', labelKk: 'Өз жобаң', emoji: '🚀', hint: 'приложение, сайт, инициатива', hintKk: 'қосымша, сайт, бастама' },
-  { id: 'course', label: 'Курс с сертификатом', labelKk: 'Сертификаты бар курс', emoji: '📜', hint: 'онлайн-курс или программа', hintKk: 'онлайн-курс немесе бағдарлама' },
-  { id: 'volunteer', label: 'Волонтёрство', labelKk: 'Волонтёрлық', emoji: '🤝', hint: 'помощь фондам и сообществу', hintKk: 'қорлар мен қоғамға көмек' },
-  { id: 'leadership', label: 'Лидерство', labelKk: 'Көшбасшылық', emoji: '🧭', hint: 'ученический совет, клуб, команда', hintKk: 'оқушылар кеңесі, клуб, команда' },
-  { id: 'internship', label: 'Стажировка', labelKk: 'Тәжірибеден өту', emoji: '🏢', hint: 'работа или практика в организации', hintKk: 'ұйымдағы жұмыс немесе практика' },
-  { id: 'sport', label: 'Спорт', labelKk: 'Спорт', emoji: '🏅', hint: 'разряд, сборная, соревнования', hintKk: 'разряд, құрама, жарыстар' },
-  { id: 'art', label: 'Творчество', labelKk: 'Шығармашылық', emoji: '🎭', hint: 'музыка, театр, изобразительное искусство', hintKk: 'музыка, театр, бейнелеу өнері' },
+  { id: 'olympiad', label: 'Олимпиада', labelKk: 'Олимпиада', emoji: '🥇', hint: 'предметная олимпиада или турнир', hintKk: 'пәндік олимпиада немесе турнир',
+    example: 'Например: областная олимпиада по физике', exampleKk: 'Мысалы: физикадан облыстық олимпиада' },
+  { id: 'research', label: 'Исследование', labelKk: 'Зерттеу', emoji: '🔬', hint: 'научный проект, статья, конференция', hintKk: 'ғылыми жоба, мақала, конференция',
+    example: 'Например: статья о качестве воды в Kazakhstan Journal of Science', exampleKk: 'Мысалы: Kazakhstan Journal of Science журналындағы су сапасы туралы мақала' },
+  { id: 'hackathon', label: 'Хакатон', labelKk: 'Хакатон', emoji: '💻', hint: 'командная разработка за 24–48 часов', hintKk: '24–48 сағаттық командалық әзірлеу',
+    example: 'Например: 48-часовой хакатон nFactorial, приложение для школьников', exampleKk: 'Мысалы: nFactorial 48 сағаттық хакатоны, оқушыларға арналған қосымша' },
+  { id: 'contest', label: 'Конкурс или соревнование', labelKk: 'Байқау немесе жарыс', emoji: '🏆', hint: 'кейс-чемпионат, ICPC, дебаты, робототехника', hintKk: 'кейс-чемпионат, ICPC, дебат, робототехника',
+    example: 'Например: республиканский кейс-чемпионат по маркетингу', exampleKk: 'Мысалы: маркетинг бойынша республикалық кейс-чемпионат' },
+  { id: 'project', label: 'Свой проект', labelKk: 'Өз жобаң', emoji: '🚀', hint: 'приложение, сайт, инициатива', hintKk: 'қосымша, сайт, бастама',
+    example: 'Например: бот для расписания, которым пользуется вся школа', exampleKk: 'Мысалы: бүкіл мектеп қолданатын кесте боты' },
+  { id: 'course', label: 'Курс с сертификатом', labelKk: 'Сертификаты бар курс', emoji: '📜', hint: 'онлайн-курс, летняя школа, программа при вузе', hintKk: 'онлайн-курс, жазғы мектеп, ЖОО жанындағы бағдарлама',
+    example: 'Например: CS50 от Harvard с сертификатом', exampleKk: 'Мысалы: Harvard-тың CS50 курсы, сертификатымен' },
+  { id: 'volunteer', label: 'Волонтёрство', labelKk: 'Волонтёрлық', emoji: '🤝', hint: 'помощь фондам и сообществу', hintKk: 'қорлар мен қоғамға көмек',
+    example: 'Например: каждую субботу помогаю в приюте для животных', exampleKk: 'Мысалы: әр сенбіде жануарлар баспанасына көмектесемін' },
+  { id: 'leadership', label: 'Лидерство', labelKk: 'Көшбасшылық', emoji: '🧭', hint: 'ученический совет, клуб, команда', hintKk: 'оқушылар кеңесі, клуб, команда',
+    example: 'Например: основала IT-клуб в школе, 30 участников', exampleKk: 'Мысалы: мектепте IT-клуб аштым, 30 қатысушы' },
+  { id: 'internship', label: 'Стажировка', labelKk: 'Тәжірибеден өту', emoji: '🏢', hint: 'работа или практика в организации', hintKk: 'ұйымдағы жұмыс немесе практика',
+    example: 'Например: летняя стажировка в лаборатории КБТУ', exampleKk: 'Мысалы: ҚБТУ зертханасындағы жазғы тәжірибе' },
+  { id: 'sport', label: 'Спорт', labelKk: 'Спорт', emoji: '🏅', hint: 'разряд, сборная, соревнования', hintKk: 'разряд, құрама, жарыстар',
+    example: 'Например: сборная области по волейболу', exampleKk: 'Мысалы: волейболдан облыс құрамасы' },
+  { id: 'art', label: 'Творчество', labelKk: 'Шығармашылық', emoji: '🎭', hint: 'музыка, театр, изобразительное искусство', hintKk: 'музыка, театр, бейнелеу өнері',
+    example: 'Например: персональная выставка живописи в городской галерее', exampleKk: 'Мысалы: қалалық галереядағы жеке кескіндеме көрмесі' },
 ]
+
+/** Подсказка в поле «Название» на языке интерфейса, своя для каждого типа. */
+export function achievementExample(kind: AchievementKind): string {
+  const k = ACHIEVEMENT_KINDS_RAW.find((x) => x.id === kind)
+  return k ? L(k.example, k.exampleKk) : ''
+}
 
 export const ACHIEVEMENT_KIND_LABEL = labelMap<AchievementKind, (typeof ACHIEVEMENT_KINDS_RAW)[number]>(ACHIEVEMENT_KINDS_RAW)
 export function achievementKinds() { return localize(ACHIEVEMENT_KINDS_RAW) }
@@ -281,6 +301,8 @@ export const ACHIEVEMENT_KIND_EMOJI: Record<AchievementKind, string> = Object.fr
  */
 export const ACHIEVEMENT_FORMS_RAW: {
   id: AchievementForm; kind: AchievementKind; label: string; labelKk: string; weight: number
+  /** Короткое пояснение, когда из названия вида не очевидно, что это. */
+  hint?: string; hintKk?: string
 }[] = [
   { id: 'subject', kind: 'olympiad', label: 'Предметная олимпиада', labelKk: 'Пәндік олимпиада', weight: 1 },
   { id: 'team', kind: 'olympiad', label: 'Командная олимпиада', labelKk: 'Командалық олимпиада', weight: 0.9 },
@@ -292,14 +314,31 @@ export const ACHIEVEMENT_FORMS_RAW: {
   { id: 'labProject', kind: 'research', label: 'Проект под руководством вуза или лаборатории', labelKk: 'ЖОО немесе зертхана жетекшілігіндегі жоба', weight: 1.1 },
   { id: 'patent', kind: 'research', label: 'Патент или изобретение', labelKk: 'Патент немесе өнертабыс', weight: 1.2 },
 
-  { id: 'hackathon', kind: 'hackathon', label: 'Хакатон', labelKk: 'Хакатон', weight: 1 },
-  { id: 'ctf', kind: 'hackathon', label: 'CTF по кибербезопасности', labelKk: 'Киберқауіпсіздік бойынша CTF', weight: 1.05 },
-  { id: 'competitiveProgramming', kind: 'hackathon', label: 'Спортивное программирование', labelKk: 'Спорттық бағдарламалау', weight: 1.1 },
+  { id: 'hackathonClassic', kind: 'hackathon', label: 'Классический, 24–48 часов', labelKk: 'Классикалық, 24–48 сағат', weight: 1,
+    hint: 'прототип нон-стоп, demo и питч в конце', hintKk: 'прототип нон-стоп, соңында demo және питч' },
+  { id: 'hackathonOnline', kind: 'hackathon', label: 'Онлайн или гибридный', labelKk: 'Онлайн немесе гибридті', weight: 0.9,
+    hint: 'от нескольких дней до недель, работа удалённо', hintKk: 'бірнеше күннен аптаға дейін, қашықтан жұмыс' },
+  { id: 'hackathonCorporate', kind: 'hackathon', label: 'Корпоративный', labelKk: 'Корпоративтік', weight: 1.05,
+    hint: 'внутри компании: попасть туда школьнику дорогого стоит', hintKk: 'компания ішінде: оқушыға ол жерге кіру құнды' },
+  { id: 'hackathonThematic', kind: 'hackathon', label: 'Тематический', labelKk: 'Тақырыптық', weight: 1.1,
+    hint: 'узкая сфера: AI, GameDev, FinTech, инклюзия', hintKk: 'тар сала: AI, GameDev, FinTech, инклюзия' },
+  { id: 'ctf', kind: 'hackathon', label: 'CTF по кибербезопасности', labelKk: 'Киберқауіпсіздік бойынша CTF', weight: 1.05,
+    hint: 'поиск уязвимостей на время', hintKk: 'уақытқа қарсы осалдықтарды іздеу' },
 
-  { id: 'caseChampionship', kind: 'contest', label: 'Кейс-чемпионат', labelKk: 'Кейс-чемпионат', weight: 1 },
-  { id: 'debate', kind: 'contest', label: 'Дебаты или модель ООН', labelKk: 'Дебат немесе БҰҰ моделі', weight: 0.95 },
-  { id: 'robotics', kind: 'contest', label: 'Робототехника или инженерное соревнование', labelKk: 'Робототехника немесе инженерлік жарыс', weight: 1.05 },
-  { id: 'creativeContest', kind: 'contest', label: 'Творческий конкурс', labelKk: 'Шығармашылық байқау', weight: 0.9 },
+  { id: 'competitiveProgramming', kind: 'contest', label: 'Спортивное программирование', labelKk: 'Спорттық бағдарламалау', weight: 1.15,
+    hint: 'ICPC, Codeforces, олимпиады по алгоритмам', hintKk: 'ICPC, Codeforces, алгоритм олимпиадалары' },
+  { id: 'researchContest', kind: 'contest', label: 'Конкурс научных работ', labelKk: 'Ғылыми жұмыстар байқауы', weight: 1.1,
+    hint: 'долгая подготовка и защита перед жюри', hintKk: 'ұзақ дайындық және қазылар алдында қорғау' },
+  { id: 'caseChampionship', kind: 'contest', label: 'Кейс-чемпионат', labelKk: 'Кейс-чемпионат', weight: 1,
+    hint: 'разбор бизнес-задачи и презентация решения', hintKk: 'бизнес-міндетті талдау және шешімді ұсыну' },
+  { id: 'startupPitch', kind: 'contest', label: 'Конкурс стартапов или питч-сессия', labelKk: 'Стартаптар байқауы немесе питч-сессия', weight: 1.05,
+    hint: 'защита продукта и бизнес-модели перед инвесторами', hintKk: 'өнім мен бизнес-модельді инвесторлар алдында қорғау' },
+  { id: 'debate', kind: 'contest', label: 'Дебаты или модель ООН', labelKk: 'Дебат немесе БҰҰ моделі', weight: 0.95,
+    hint: 'аргументация и публичное выступление', hintKk: 'дәлелдеу және көпшілік алдында сөйлеу' },
+  { id: 'robotics', kind: 'contest', label: 'Робототехника или инженерное соревнование', labelKk: 'Робототехника немесе инженерлік жарыс', weight: 1.05,
+    hint: 'сборка и программирование устройства', hintKk: 'құрылғыны құрастыру және бағдарламалау' },
+  { id: 'creativeContest', kind: 'contest', label: 'Творческий конкурс', labelKk: 'Шығармашылық байқау', weight: 0.9,
+    hint: 'работы по дизайну, музыке, тексту, видео', hintKk: 'дизайн, музыка, мәтін, бейне бойынша жұмыстар' },
 
   { id: 'app', kind: 'project', label: 'Приложение, сайт или сервис', labelKk: 'Қосымша, сайт немесе сервис', weight: 1 },
   { id: 'venture', kind: 'project', label: 'Бизнес или стартап', labelKk: 'Бизнес немесе стартап', weight: 1.1 },
@@ -352,8 +391,54 @@ export const ACHIEVEMENT_LEVELS_RAW: {
   { id: 'international', label: 'Международный', labelKk: 'Халықаралық', weight: 1 },
 ]
 
+/**
+ * Как называется масштаб в контексте конкретного типа.
+ *
+ * «Школьный уровень» ничего не говорит про хакатон, а «до 100 участников,
+ * внутри вуза или города» — говорит. Значение уровня и его вес при этом
+ * не меняются: меняется только подпись, которую человек читает.
+ */
+const LEVEL_LABEL_BY_KIND: Partial<Record<AchievementKind, Partial<Record<AchievementLevel, [string, string]>>>> = {
+  hackathon: {
+    school: ['Локальный: внутри школы или вуза', 'Жергілікті: мектеп немесе ЖОО ішінде'],
+    city: ['Городской: до 100 участников', 'Қалалық: 100 қатысушыға дейін'],
+    region: ['Областной или межвузовский', 'Облыстық немесе ЖОО аралық'],
+    national: ['Национальный: от 300 участников, крупные спонсоры', 'Ұлттық: 300 қатысушыдан, ірі демеушілер'],
+    international: ['Глобальный: тысячи участников из разных стран', 'Жаһандық: түрлі елден мыңдаған қатысушы'],
+  },
+  contest: {
+    school: ['Институциональный: внутри школы или вуза', 'Институционалдық: мектеп немесе ЖОО ішінде'],
+    city: ['Городской отбор', 'Қалалық іріктеу'],
+    region: ['Региональный или областной', 'Аймақтық немесе облыстық'],
+    national: ['Республиканский: главные состязания страны', 'Республикалық: елдегі басты жарыстар'],
+    international: ['Международный: десятки стран', 'Халықаралық: ондаған ел'],
+  },
+  research: {
+    school: ['Школьная конференция', 'Мектеп конференциясы'],
+    city: ['Городская конференция', 'Қалалық конференция'],
+    region: ['Областная конференция', 'Облыстық конференция'],
+    national: ['Республиканский конкурс или журнал', 'Республикалық байқау немесе журнал'],
+    international: ['Международная конференция или журнал', 'Халықаралық конференция немесе журнал'],
+  },
+  internship: {
+    school: ['Внутри школы', 'Мектеп ішінде'],
+    city: ['Местная организация', 'Жергілікті ұйым'],
+    region: ['Крупная организация региона', 'Аймақтағы ірі ұйым'],
+    national: ['Известная компания или вуз страны', 'Елге белгілі компания немесе ЖОО'],
+    international: ['Международная компания или лаборатория', 'Халықаралық компания немесе зертхана'],
+  },
+}
+
+/** Варианты масштаба с подписями под выбранный тип достижения. */
+export function achievementLevels(kind?: AchievementKind) {
+  const overrides = kind ? LEVEL_LABEL_BY_KIND[kind] : undefined
+  return ACHIEVEMENT_LEVELS_RAW.map((l) => {
+    const pair = overrides?.[l.id]
+    return { id: l.id, label: pair ? L(pair[0], pair[1]) : L(l.label, l.labelKk) }
+  })
+}
+
 export const ACHIEVEMENT_LEVEL_LABEL = labelMap<AchievementLevel, (typeof ACHIEVEMENT_LEVELS_RAW)[number]>(ACHIEVEMENT_LEVELS_RAW)
-export function achievementLevels() { return localize(ACHIEVEMENT_LEVELS_RAW) }
 
 export const ACHIEVEMENT_LEVEL_WEIGHT: Record<AchievementLevel, number> = Object.fromEntries(
   ACHIEVEMENT_LEVELS_RAW.map((l) => [l.id, l.weight]),

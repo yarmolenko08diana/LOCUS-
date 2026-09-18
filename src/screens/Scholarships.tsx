@@ -83,6 +83,15 @@ export function Scholarships() {
               </ul>
             )}
 
+            {m.scholarship.competition && (
+              <div className="mt-4 rounded-xl border border-coral-100 bg-coral-50 p-3.5">
+                <p className="label mb-1.5 text-coral-700">{L('Насколько это реально', 'Бұл қаншалықты нақты')}</p>
+                <p className="text-sm leading-relaxed text-ink-soft">
+                  {L(m.scholarship.competition, m.scholarship.competitionKk ?? m.scholarship.competition)}
+                </p>
+              </div>
+            )}
+
             {m.gaps.length > 0 && (
               <div className="mt-4 rounded-xl border border-sun-100 bg-sun-50 p-3.5">
                 <p className="label mb-1.5 text-sun-700">{L('Чего не хватает', 'Не жетпейді')}</p>

@@ -18,6 +18,10 @@ import { LangProvider } from '../i18n/LangContext'
 import { clear, load, save, type PersistedShape } from './storage'
 import { demoCase, type DemoCase } from '../data/demoCases'
 import { reviewEssays, type CriterionState, type EssayReview } from '../engine/essay'
+import {
+  clearAccount, hashPassword, loadAccount, newSalt, saveAccount, view,
+  type Account, type AccountView,
+} from './account'
 
 type DemoCaseId = DemoCase['id']
 
@@ -72,6 +76,18 @@ interface AppState {
   /** Отметки по требованиям к эссе и study plan. */
   essay: Record<string, CriterionState>
   essays: EssayReview[]
+  /** Локальный аккаунт: null, когда никто не вошёл. */
+  account: AccountView | null
+  signUp: (input: { email: string; password: string; firstName: string; lastName: string }) => Promise<string | null>
+  signIn: (email: string, password: string) => Promise<string | null>
+  signOut: () => void
+  updateAccount: (patch: Partial<Omit<Account, 'salt' | 'hash' | 'createdAt'>>) => void
+  /** Есть ли на устройстве сохранённый аккаунт, даже если сейчас не вошли. */
+  hasAccount: boolean
+  /** Пересоздать аккаунт с новым паролем: писем без сервера не отправить. */
+  resetPassword: (email: string, password: string) => Promise<string | null>
+  /** Полностью удалить аккаунт с устройства. */
+  deleteAccount: () => void
   lang: Lang
   theme: ThemeMode
   changeNote: ChangeNote | null
@@ -188,6 +204,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [compare, setCompare] = useState<string[]>(() => readInitial().compare)
   const [reminders, setReminders] = useState<string[]>(() => readInitial().reminders)
   const [essay, setEssay] = useState<Record<string, CriterionState>>(() => readInitial().essay)
+  const [stored, setStored] = useState<Account | null>(() => loadAccount())
+  const [signedIn, setSignedIn] = useState(false)
   const [lang, setLangState] = useState<Lang>(() => readInitial().lang)
   const [theme, setThemeState] = useState<ThemeMode>(() => readInitial().theme)
   const [changeNote, setChangeNote] = useState<ChangeNote | null>(null)
@@ -303,6 +321,88 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setReminders((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
   }, [])
 
+  /*
+   * Сессия входа живёт в памяти, а не в localStorage: перезагрузка страницы
+   * снова просит пароль. Для прототипа без сервера это единственный честный
+   * вариант — «запомнить меня» означало бы хранить признак входа рядом
+   * с хешем, и тогда пароль перестал бы что-либо защищать.
+   */
+  const account = useMemo<AccountView | null>(
+    () => (signedIn && stored ? view(stored) : null),
+    [signedIn, stored],
+  )
+
+  const signUp = useCallback(
+    async (input: { email: string; password: string; firstName: string; lastName: string }) => {
+      const salt = newSalt()
+      const next: Account = {
+        email: input.email.trim().toLocaleLowerCase('ru'),
+        salt,
+        hash: await hashPassword(salt, input.password),
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        createdAt: new Date().toISOString(),
+      }
+      saveAccount(next)
+      setStored(next)
+      setSignedIn(true)
+      return null
+    },
+    [],
+  )
+
+  const signIn = useCallback(async (email: string, password: string) => {
+    const saved = loadAccount()
+    if (!saved) {
+      return L('На этом устройстве ещё нет аккаунта. Создай его ниже.', 'Бұл құрылғыда әзірге аккаунт жоқ. Төменде жаса.')
+    }
+    if (saved.email !== email.trim().toLocaleLowerCase('ru')) {
+      return L('Такой почты на этом устройстве нет.', 'Бұл құрылғыда мұндай пошта жоқ.')
+    }
+    if ((await hashPassword(saved.salt, password)) !== saved.hash) {
+      return L('Пароль не подходит.', 'Құпия сөз келмейді.')
+    }
+    setStored(saved)
+    setSignedIn(true)
+    return null
+  }, [])
+
+  const signOut = useCallback(() => setSignedIn(false), [])
+
+  const deleteAccount = useCallback(() => {
+    clearAccount()
+    setStored(null)
+    setSignedIn(false)
+  }, [])
+
+  const resetPassword = useCallback(async (email: string, password: string) => {
+    const saved = loadAccount()
+    if (!saved) {
+      return L('На этом устройстве ещё нет аккаунта.', 'Бұл құрылғыда әзірге аккаунт жоқ.')
+    }
+    if (saved.email !== email.trim().toLocaleLowerCase('ru')) {
+      return L('Такой почты на этом устройстве нет.', 'Бұл құрылғыда мұндай пошта жоқ.')
+    }
+    const salt = newSalt()
+    const next: Account = { ...saved, salt, hash: await hashPassword(salt, password) }
+    saveAccount(next)
+    setStored(next)
+    setSignedIn(true)
+    return null
+  }, [])
+
+  const updateAccount = useCallback(
+    (patch: Partial<Omit<Account, 'salt' | 'hash' | 'createdAt'>>) => {
+      setStored((prev) => {
+        if (!prev) return prev
+        const next = { ...prev, ...patch }
+        saveAccount(next)
+        return next
+      })
+    },
+    [],
+  )
+
   const setEssayAnswer = useCallback((criterionId: string, state: CriterionState) => {
     setEssay((prev) => ({ ...prev, [criterionId]: state }))
   }, [])
@@ -330,12 +430,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setReminders([])
     setEssay({})
     setChangeNote(null)
+    // Аккаунт при сбросе анкеты сохраняется: человек чистит ответы,
+    // а не отказывается от самого профиля. Удаление — отдельная кнопка.
   }, [])
 
   const value: AppState = {
     profile, completed, recommendations, diagnosis, roadmap, tasks, next,
     scholarships, calendar, activities, achievements,
-    done, saved: savedIds, compare, reminders, essay, essays, setEssayAnswer, lang, theme, changeNote,
+    done, saved: savedIds, compare, reminders, essay, essays, setEssayAnswer,
+    account, signUp, signIn, signOut, updateAccount, resetPassword, deleteAccount,
+    hasAccount: stored !== null,
+    lang, theme, changeNote,
     setProfile, addAchievement, removeAchievement, completeSurvey, loadDemo,
     toggleDone, toggleSaved, toggleCompare, toggleReminder, setLang, setTheme,
     dismissChange, reset,

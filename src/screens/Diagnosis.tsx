@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, DemoNote, Meter, SectionTitle } from '../components/ui'
 import { useApp } from '../store/app'
+import { displayName } from '../store/account'
 import {
   BUDGET_LABEL, COUNTRY_FLAG, COUNTRY_LABEL, EXAM_LABEL, englishLevels,
   FIELD_LABEL, SCHOOL_SYSTEM_LABEL, STAGE_LABEL, SUBJECT_LABEL,
@@ -51,7 +52,9 @@ function Summary({ profile, diagnosis }: { profile: Profile; diagnosis: Diagnosi
 }
 
 export function Diagnosis() {
-  const { profile, diagnosis, recommendations, completed, achievements } = useApp()
+  const { profile, diagnosis, recommendations, completed, achievements, account } = useApp()
+  // Имя из аккаунта важнее имени из анкеты: человек вводил его последним.
+  const who = displayName(account, profile.name)
   const L = useL()
   const navigate = useNavigate()
 
@@ -79,8 +82,8 @@ export function Diagnosis() {
       <header>
         <p className="label mb-2">{L('Шаг 2 · Диагностика', '2-қадам · Диагностика')}</p>
         <h1 className="text-[28px] font-extrabold leading-tight tracking-[-0.02em] sm:text-4xl">
-          {profile.name
-            ? L(`${profile.name}, вот как выглядит твой профиль`, `${profile.name}, профилің осылай көрінеді`)
+          {who
+            ? L(`${who}, вот как выглядит твой профиль`, `${who}, профилің осылай көрінеді`)
             : L('Вот как выглядит твой профиль', 'Профилің осылай көрінеді')}
         </h1>
         <Summary profile={profile} diagnosis={diagnosis} />
