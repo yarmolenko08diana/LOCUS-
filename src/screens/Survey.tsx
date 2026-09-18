@@ -4,13 +4,13 @@ import { Badge, Button, Card, Chip, DemoNote, Meter } from '../components/ui'
 import { useApp } from '../store/app'
 import { useL } from '../i18n/LangContext'
 import {
-  ACHIEVEMENT_KIND_EMOJI, achievementAwards, achievementKinds, achievementLevels,
+  ACHIEVEMENT_KIND_EMOJI, achievementAwards, achievementForms, achievementKinds, achievementLevels,
   budgets, countries, englishLevels, exams, fields, languages, priorities,
   schoolSystems, stages, subjects, tones,
 } from '../data/taxonomy'
 import { achievementLabel, summarizeAchievements } from '../engine/achievements'
 import type {
-  Achievement, AchievementAward, AchievementKind, AchievementLevel, ExamId, Profile,
+  Achievement, AchievementAward, AchievementForm, AchievementKind, AchievementLevel, ExamId, Profile,
 } from '../types'
 
 interface StepDef {
@@ -140,6 +140,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
   const L = useL()
   const currentYear = new Date().getFullYear()
   const [kind, setKind] = useState<AchievementKind>('olympiad')
+  const [form, setForm] = useState<AchievementForm | ''>('')
   const [level, setLevel] = useState<AchievementLevel>('city')
   const [award, setAward] = useState<AchievementAward>('participant')
   const [title, setTitle] = useState('')
@@ -148,6 +149,8 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
 
   const needsHours = kind === 'volunteer' || kind === 'internship' || kind === 'course'
   const canAdd = title.trim().length >= 3
+  // Виды зависят от типа, поэтому при смене типа выбранный вид сбрасывается.
+  const forms = achievementForms(kind)
 
   return (
     <Card className="p-4">
@@ -159,7 +162,7 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
             <button
               key={k.id}
               type="button"
-              onClick={() => setKind(k.id)}
+              onClick={() => { setKind(k.id); setForm('') }}
               aria-pressed={kind === k.id}
               className={`flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 text-[13px] font-semibold transition-colors ${
                 kind === k.id
@@ -186,6 +189,19 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
       </label>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        <label className="block">
+          <span className="text-sm font-semibold">{L('Вид', 'Түрі')}</span>
+          <select
+            value={form}
+            onChange={(e) => setForm(e.target.value as AchievementForm | '')}
+            className="mt-1.5 h-11 w-full rounded-xl border border-line bg-surface px-3 text-[15px] focus:border-brand-400"
+          >
+            <option value="">{L('Не уточнять', 'Нақтыламау')}</option>
+            {forms.map((f) => (
+              <option key={f.id} value={f.id}>{f.label}</option>
+            ))}
+          </select>
+        </label>
         <label className="block">
           <span className="text-sm font-semibold">{L('Масштаб', 'Деңгейі')}</span>
           <select
@@ -241,9 +257,14 @@ function AchievementForm({ onAdd }: { onAdd: (a: Omit<Achievement, 'id'>) => voi
         full
         disabled={!canAdd}
         onClick={() => {
-          onAdd({ kind, level, award, title: title.trim(), year, hours: needsHours ? hours : undefined })
+          onAdd({
+            kind, level, award, title: title.trim(), year,
+            hours: needsHours ? hours : undefined,
+            form: form === '' ? undefined : form,
+          })
           setTitle('')
           setHours(undefined)
+          setForm('')
         }}
       >
         {L('Добавить', 'Қосу')}

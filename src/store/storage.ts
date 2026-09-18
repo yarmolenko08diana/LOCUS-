@@ -1,4 +1,5 @@
 import type { Lang, ThemeMode } from '../types'
+import type { CriterionState } from '../engine/essay'
 
 const KEY = 'qadam.state.v2'
 
@@ -11,6 +12,8 @@ export interface PersistedShape {
   lang?: Lang
   theme?: ThemeMode
   reminders?: string[]
+  /** Отметки по требованиям к эссе и study plan. */
+  essay?: Record<string, CriterionState>
 }
 
 export function load<T extends PersistedShape>(): T | null {

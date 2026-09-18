@@ -70,6 +70,26 @@ export type AchievementLevel = 'school' | 'city' | 'region' | 'national' | 'inte
 /** Результат: участие или призовое место. */
 export type AchievementAward = 'participant' | 'finalist' | 'bronze' | 'silver' | 'gold'
 
+/**
+ * Вид достижения внутри его типа.
+ *
+ * «Исследование» — это и школьная работа, и статья в журнале, и проект под
+ * руководством вуза, а весят они по-разному. Один масштаб этого не передаёт,
+ * поэтому вид указывается отдельно и влияет на вес достижения.
+ */
+export type AchievementForm =
+  | 'subject' | 'team' | 'tournament'
+  | 'schoolWork' | 'conference' | 'article' | 'labProject' | 'patent'
+  | 'hackathon' | 'ctf' | 'competitiveProgramming'
+  | 'caseChampionship' | 'debate' | 'robotics' | 'creativeContest'
+  | 'app' | 'venture' | 'nonprofit' | 'mediaProject'
+  | 'onlineCourse' | 'summerSchool' | 'universityProgram'
+  | 'regularService' | 'oneOffAction' | 'ownInitiative'
+  | 'studentCouncil' | 'clubLead' | 'teamCaptain'
+  | 'company' | 'laboratory' | 'ngo'
+  | 'competition' | 'nationalTeam' | 'rank'
+  | 'exhibition' | 'performance' | 'publication'
+
 export interface Achievement {
   id: string
   kind: AchievementKind
@@ -80,6 +100,8 @@ export interface Achievement {
   year: number
   /** Часы для волонтёрства, курсов и стажировок. */
   hours?: number
+  /** Вид внутри типа: статья, конференция, патент и так далее. */
+  form?: AchievementForm
 }
 
 export interface Profile {

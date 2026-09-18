@@ -1,7 +1,8 @@
 import type { Achievement, AchievementKind, FieldId, Profile } from '../types'
 import {
-  ACHIEVEMENT_AWARD_LABEL, ACHIEVEMENT_AWARD_WEIGHT, ACHIEVEMENT_KIND_LABEL,
-  ACHIEVEMENT_LEVEL_LABEL, ACHIEVEMENT_LEVEL_WEIGHT, FIELD_ACHIEVEMENTS,
+  ACHIEVEMENT_AWARD_LABEL, ACHIEVEMENT_AWARD_WEIGHT, ACHIEVEMENT_FORM_LABEL,
+  ACHIEVEMENT_FORM_WEIGHT, ACHIEVEMENT_KIND_LABEL, ACHIEVEMENT_LEVEL_LABEL,
+  ACHIEVEMENT_LEVEL_WEIGHT, FIELD_ACHIEVEMENTS,
 } from '../data/taxonomy'
 import { plural } from '../lib/text'
 import { L } from '../i18n/lang'
@@ -24,19 +25,26 @@ export interface AchievementSummary {
   hours: number
 }
 
-/** Вес одного достижения: масштаб × результат, со скидкой за давность. */
+/**
+ * Вес одного достижения: масштаб × результат × вид, со скидкой за давность.
+ *
+ * Вид добавляет то, чего не видно по масштабу: статья и школьный реферат могут
+ * быть одного уровня, но читаются приёмной комиссией по-разному.
+ */
 export function achievementValue(a: Achievement, currentYear: number): number {
   const base = ACHIEVEMENT_LEVEL_WEIGHT[a.level] * ACHIEVEMENT_AWARD_WEIGHT[a.award]
+  const form = a.form ? ACHIEVEMENT_FORM_WEIGHT[a.form] : 1
   const age = currentYear - a.year
   const freshness = age <= 1 ? 1 : age <= 3 ? 0.85 : 0.65
-  return base * freshness
+  return base * form * freshness
 }
 
 /** Человекочитаемое описание достижения: «Республиканская олимпиада, 1 место». */
 export function achievementLabel(a: Achievement): string {
+  const what = a.form ? ACHIEVEMENT_FORM_LABEL[a.form] : ACHIEVEMENT_KIND_LABEL[a.kind]
   return L(
-    `${ACHIEVEMENT_LEVEL_LABEL[a.level]} уровень · ${ACHIEVEMENT_KIND_LABEL[a.kind]} · ${ACHIEVEMENT_AWARD_LABEL[a.award]}`,
-    `${ACHIEVEMENT_LEVEL_LABEL[a.level]} деңгей · ${ACHIEVEMENT_KIND_LABEL[a.kind]} · ${ACHIEVEMENT_AWARD_LABEL[a.award]}`,
+    `${ACHIEVEMENT_LEVEL_LABEL[a.level]} уровень · ${what} · ${ACHIEVEMENT_AWARD_LABEL[a.award]}`,
+    `${ACHIEVEMENT_LEVEL_LABEL[a.level]} деңгей · ${what} · ${ACHIEVEMENT_AWARD_LABEL[a.award]}`,
   )
 }
 

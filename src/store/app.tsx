@@ -17,6 +17,7 @@ import { L, setEngineLang } from '../i18n/lang'
 import { LangProvider } from '../i18n/LangContext'
 import { clear, load, save, type PersistedShape } from './storage'
 import { demoCase, type DemoCase } from '../data/demoCases'
+import { reviewEssays, type CriterionState, type EssayReview } from '../engine/essay'
 
 type DemoCaseId = DemoCase['id']
 
@@ -68,6 +69,9 @@ interface AppState {
   saved: string[]
   compare: string[]
   reminders: string[]
+  /** Отметки по требованиям к эссе и study plan. */
+  essay: Record<string, CriterionState>
+  essays: EssayReview[]
   lang: Lang
   theme: ThemeMode
   changeNote: ChangeNote | null
@@ -80,6 +84,7 @@ interface AppState {
   toggleSaved: (id: string) => void
   toggleCompare: (id: string) => void
   toggleReminder: (id: string) => void
+  setEssayAnswer: (criterionId: string, state: CriterionState) => void
   setLang: (lang: Lang) => void
   setTheme: (theme: ThemeMode) => void
   dismissChange: () => void
@@ -95,6 +100,7 @@ interface Initial {
   saved: string[]
   compare: string[]
   reminders: string[]
+  essay: Record<string, CriterionState>
   lang: Lang
   theme: ThemeMode
 }
@@ -108,6 +114,7 @@ function readInitial(): Initial {
     saved: [],
     compare: [],
     reminders: [],
+    essay: {},
     lang: 'ru',
     theme: 'system',
   }
@@ -121,6 +128,7 @@ function readInitial(): Initial {
     saved: stored.saved ?? [],
     compare: stored.compare ?? [],
     reminders: stored.reminders ?? [],
+    essay: stored.essay ?? {},
     lang: stored.lang ?? 'ru',
     theme: stored.theme ?? 'system',
   }
@@ -179,6 +187,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [savedIds, setSavedIds] = useState<string[]>(() => readInitial().saved)
   const [compare, setCompare] = useState<string[]>(() => readInitial().compare)
   const [reminders, setReminders] = useState<string[]>(() => readInitial().reminders)
+  const [essay, setEssay] = useState<Record<string, CriterionState>>(() => readInitial().essay)
   const [lang, setLangState] = useState<Lang>(() => readInitial().lang)
   const [theme, setThemeState] = useState<ThemeMode>(() => readInitial().theme)
   const [changeNote, setChangeNote] = useState<ChangeNote | null>(null)
@@ -205,12 +214,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     () => buildCalendar(profile, recommendations, scholarships),
     [profile, recommendations, scholarships],
   )
-  const activities = useMemo(() => suggestActivities(profile), [profile])
+  // 12 вместо шести: на экране активности разложены по трём группам,
+  // и короткого списка не хватает, чтобы наполнить каждую.
+  const activities = useMemo(() => suggestActivities(profile, 12), [profile])
   const achievements = useMemo(() => summarizeAchievements(profile), [profile])
+  /* eslint-disable-next-line react-hooks/exhaustive-deps -- язык движок читает из модуля */
+  const essays = useMemo(() => reviewEssays(profile, recommendations, essay), [profile, recommendations, essay, lang])
 
   useEffect(() => {
-    save({ profile, completed, done, saved: savedIds, compare, reminders, lang, theme })
-  }, [profile, completed, done, savedIds, compare, reminders, lang, theme])
+    save({ profile, completed, done, saved: savedIds, compare, reminders, essay, lang, theme })
+  }, [profile, completed, done, savedIds, compare, reminders, essay, lang, theme])
 
   // Тема применяется к <html>, чтобы CSS-переменные переключились разом.
   useEffect(() => {
@@ -275,6 +288,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setCompare([])
     setSavedIds([])
     setReminders([])
+    setEssay({})
   }, [])
 
   const toggleDone = useCallback((id: string) => {
@@ -287,6 +301,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const toggleReminder = useCallback((id: string) => {
     setReminders((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]))
+  }, [])
+
+  const setEssayAnswer = useCallback((criterionId: string, state: CriterionState) => {
+    setEssay((prev) => ({ ...prev, [criterionId]: state }))
   }, [])
 
   const toggleCompare = useCallback((id: string) => {
@@ -310,13 +328,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSavedIds([])
     setCompare([])
     setReminders([])
+    setEssay({})
     setChangeNote(null)
   }, [])
 
   const value: AppState = {
     profile, completed, recommendations, diagnosis, roadmap, tasks, next,
     scholarships, calendar, activities, achievements,
-    done, saved: savedIds, compare, reminders, lang, theme, changeNote,
+    done, saved: savedIds, compare, reminders, essay, essays, setEssayAnswer, lang, theme, changeNote,
     setProfile, addAchievement, removeAchievement, completeSurvey, loadDemo,
     toggleDone, toggleSaved, toggleCompare, toggleReminder, setLang, setTheme,
     dismissChange, reset,

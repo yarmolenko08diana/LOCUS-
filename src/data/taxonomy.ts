@@ -1,5 +1,5 @@
 import type {
-  AchievementAward, AchievementKind, AchievementLevel, BudgetTier, CountryCode,
+  AchievementAward, AchievementForm, AchievementKind, AchievementLevel, BudgetTier, CountryCode,
   EnglishLevel, ExamId, FieldId, LanguageCode, Priority, SchoolSystem, Stage, ToneId,
 } from '../types'
 import { L } from '../i18n/lang'
@@ -270,6 +270,77 @@ export function achievementKinds() { return localize(ACHIEVEMENT_KINDS_RAW) }
 export const ACHIEVEMENT_KIND_EMOJI: Record<AchievementKind, string> = Object.fromEntries(
   ACHIEVEMENT_KINDS_RAW.map((k) => [k.id, k.emoji]),
 ) as Record<AchievementKind, string>
+
+/**
+ * Вид достижения внутри типа.
+ *
+ * Масштаб («республиканский», «международный») не отвечает на вопрос, что
+ * именно было сделано: школьная исследовательская работа и статья в журнале
+ * могут быть одного масштаба и при этом читаются приёмной комиссией
+ * совершенно по-разному. Вес здесь — множитель к весу достижения.
+ */
+export const ACHIEVEMENT_FORMS_RAW: {
+  id: AchievementForm; kind: AchievementKind; label: string; labelKk: string; weight: number
+}[] = [
+  { id: 'subject', kind: 'olympiad', label: 'Предметная олимпиада', labelKk: 'Пәндік олимпиада', weight: 1 },
+  { id: 'team', kind: 'olympiad', label: 'Командная олимпиада', labelKk: 'Командалық олимпиада', weight: 0.9 },
+  { id: 'tournament', kind: 'olympiad', label: 'Турнир или чемпионат', labelKk: 'Турнир немесе чемпионат', weight: 0.85 },
+
+  { id: 'schoolWork', kind: 'research', label: 'Школьная исследовательская работа', labelKk: 'Мектептік зерттеу жұмысы', weight: 0.7 },
+  { id: 'conference', kind: 'research', label: 'Доклад на конференции', labelKk: 'Конференциядағы баяндама', weight: 0.95 },
+  { id: 'article', kind: 'research', label: 'Научная статья или публикация', labelKk: 'Ғылыми мақала немесе жарияланым', weight: 1.15 },
+  { id: 'labProject', kind: 'research', label: 'Проект под руководством вуза или лаборатории', labelKk: 'ЖОО немесе зертхана жетекшілігіндегі жоба', weight: 1.1 },
+  { id: 'patent', kind: 'research', label: 'Патент или изобретение', labelKk: 'Патент немесе өнертабыс', weight: 1.2 },
+
+  { id: 'hackathon', kind: 'hackathon', label: 'Хакатон', labelKk: 'Хакатон', weight: 1 },
+  { id: 'ctf', kind: 'hackathon', label: 'CTF по кибербезопасности', labelKk: 'Киберқауіпсіздік бойынша CTF', weight: 1.05 },
+  { id: 'competitiveProgramming', kind: 'hackathon', label: 'Спортивное программирование', labelKk: 'Спорттық бағдарламалау', weight: 1.1 },
+
+  { id: 'caseChampionship', kind: 'contest', label: 'Кейс-чемпионат', labelKk: 'Кейс-чемпионат', weight: 1 },
+  { id: 'debate', kind: 'contest', label: 'Дебаты или модель ООН', labelKk: 'Дебат немесе БҰҰ моделі', weight: 0.95 },
+  { id: 'robotics', kind: 'contest', label: 'Робототехника или инженерное соревнование', labelKk: 'Робототехника немесе инженерлік жарыс', weight: 1.05 },
+  { id: 'creativeContest', kind: 'contest', label: 'Творческий конкурс', labelKk: 'Шығармашылық байқау', weight: 0.9 },
+
+  { id: 'app', kind: 'project', label: 'Приложение, сайт или сервис', labelKk: 'Қосымша, сайт немесе сервис', weight: 1 },
+  { id: 'venture', kind: 'project', label: 'Бизнес или стартап', labelKk: 'Бизнес немесе стартап', weight: 1.1 },
+  { id: 'nonprofit', kind: 'project', label: 'Общественная инициатива', labelKk: 'Қоғамдық бастама', weight: 1.05 },
+  { id: 'mediaProject', kind: 'project', label: 'Медиа, блог или подкаст', labelKk: 'Медиа, блог немесе подкаст', weight: 0.9 },
+
+  { id: 'onlineCourse', kind: 'course', label: 'Онлайн-курс с сертификатом', labelKk: 'Сертификаты бар онлайн-курс', weight: 0.8 },
+  { id: 'summerSchool', kind: 'course', label: 'Летняя или зимняя школа', labelKk: 'Жазғы немесе қысқы мектеп', weight: 1.05 },
+  { id: 'universityProgram', kind: 'course', label: 'Программа при университете', labelKk: 'Университет жанындағы бағдарлама', weight: 1.1 },
+
+  { id: 'regularService', kind: 'volunteer', label: 'Регулярное волонтёрство', labelKk: 'Тұрақты волонтёрлық', weight: 1.1 },
+  { id: 'oneOffAction', kind: 'volunteer', label: 'Разовая акция', labelKk: 'Бір реттік акция', weight: 0.75 },
+  { id: 'ownInitiative', kind: 'volunteer', label: 'Своя волонтёрская инициатива', labelKk: 'Өз волонтёрлық бастамаң', weight: 1.15 },
+
+  { id: 'studentCouncil', kind: 'leadership', label: 'Ученический совет', labelKk: 'Оқушылар кеңесі', weight: 1 },
+  { id: 'clubLead', kind: 'leadership', label: 'Руководитель клуба или сообщества', labelKk: 'Клуб немесе қауымдастық жетекшісі', weight: 1.05 },
+  { id: 'teamCaptain', kind: 'leadership', label: 'Капитан команды', labelKk: 'Команда капитаны', weight: 0.95 },
+
+  { id: 'company', kind: 'internship', label: 'Компания', labelKk: 'Компания', weight: 1 },
+  { id: 'laboratory', kind: 'internship', label: 'Научная лаборатория', labelKk: 'Ғылыми зертхана', weight: 1.15 },
+  { id: 'ngo', kind: 'internship', label: 'Фонд или НКО', labelKk: 'Қор немесе үкіметтік емес ұйым', weight: 0.95 },
+
+  { id: 'competition', kind: 'sport', label: 'Соревнования', labelKk: 'Жарыстар', weight: 1 },
+  { id: 'nationalTeam', kind: 'sport', label: 'Сборная', labelKk: 'Құрама', weight: 1.1 },
+  { id: 'rank', kind: 'sport', label: 'Спортивный разряд', labelKk: 'Спорттық разряд', weight: 0.9 },
+
+  { id: 'exhibition', kind: 'art', label: 'Выставка или показ', labelKk: 'Көрме немесе көрсетілім', weight: 1.05 },
+  { id: 'performance', kind: 'art', label: 'Выступление или концерт', labelKk: 'Өнер көрсету немесе концерт', weight: 1 },
+  { id: 'publication', kind: 'art', label: 'Публикация работы', labelKk: 'Жұмыстың жариялануы', weight: 1.05 },
+]
+
+export const ACHIEVEMENT_FORM_LABEL = labelMap<AchievementForm, (typeof ACHIEVEMENT_FORMS_RAW)[number]>(ACHIEVEMENT_FORMS_RAW)
+
+export const ACHIEVEMENT_FORM_WEIGHT: Record<AchievementForm, number> = Object.fromEntries(
+  ACHIEVEMENT_FORMS_RAW.map((f) => [f.id, f.weight]),
+) as Record<AchievementForm, number>
+
+/** Виды, доступные для выбранного типа достижения, на языке интерфейса. */
+export function achievementForms(kind: AchievementKind) {
+  return localize(ACHIEVEMENT_FORMS_RAW.filter((f) => f.kind === kind))
+}
 
 export const ACHIEVEMENT_LEVELS_RAW: {
   id: AchievementLevel; label: string; labelKk: string; weight: number
