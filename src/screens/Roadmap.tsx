@@ -10,6 +10,9 @@ const CATEGORY: Record<TaskCategory, { label: string; icon: string; tone: 'brand
   document: { label: 'Документы', icon: '📄', tone: 'sun' },
   academic: { label: 'Учёба', icon: '📚', tone: 'mint' },
   activity: { label: 'Активности', icon: '🚀', tone: 'coral' },
+  essay: { label: 'Эссе', icon: '✍️', tone: 'brand' },
+  contest: { label: 'Конкурсы', icon: '🏆', tone: 'sun' },
+  scholarship: { label: 'Стипендии', icon: '💰', tone: 'mint' },
   research: { label: 'Разобраться', icon: '🔎', tone: 'neutral' },
 }
 

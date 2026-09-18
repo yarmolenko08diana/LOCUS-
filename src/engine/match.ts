@@ -1,5 +1,5 @@
 import type {
-  Chance, FieldId, Profile, Program, Reason, Recommendation, ScoreBreakdown,
+  Chance, FieldId, Profile, Program, Reason, ReasonTone, Recommendation, ScoreBreakdown,
 } from '../types'
 import {
   BUDGET_MAX, COUNTRY_LABEL, ENGLISH_TO_IELTS, ENGLISH_RANK,
@@ -7,18 +7,21 @@ import {
 } from '../data/taxonomy'
 import { PROGRAMS } from '../data/programs'
 import { listOf, softLower } from '../lib/text'
+import { effectiveGpa, gpaSourceLabel, toeflToIelts } from './academics'
+import { holisticFactor, summarizeAchievements, type AchievementSummary } from './achievements'
 
 /**
  * Веса критериев подбора. Сумма — 100, поэтому итоговый score читается как процент
  * совпадения и его можно показать пользователю без дополнительной нормализации.
  */
 export const WEIGHTS = {
-  field: 28,
-  admission: 22,
-  budget: 20,
-  geo: 12,
-  language: 10,
-  priority: 8,
+  field: 26,
+  admission: 20,
+  budget: 18,
+  geo: 11,
+  language: 9,
+  priority: 7,
+  profile: 9,
 } as const
 
 export const WEIGHT_LABEL: Record<keyof ScoreBreakdown, string> = {
@@ -28,6 +31,7 @@ export const WEIGHT_LABEL: Record<keyof ScoreBreakdown, string> = {
   geo: 'География',
   language: 'Язык',
   priority: 'Приоритеты',
+  profile: 'Достижения',
 }
 
 /** Направления, которые считаются смежными: частичное совпадение лучше нуля. */
@@ -50,9 +54,13 @@ const NEAR_COUNTRIES = new Set(['KZ', 'RU', 'CN', 'TR'])
 
 const clamp01 = (n: number) => Math.max(0, Math.min(1, n))
 
-/** Лучший доступный уровень английского: сданный IELTS или самооценка уровня. */
+/**
+ * Лучший доступный уровень английского: сданный IELTS, пересчитанный TOEFL
+ * или самооценка уровня — берётся максимум из того, что есть.
+ */
 export function effectiveIelts(profile: Profile): number {
-  return Math.max(profile.exams.ielts ?? 0, ENGLISH_TO_IELTS[profile.english])
+  const fromToefl = profile.exams.toefl !== undefined ? toeflToIelts(profile.exams.toefl) : 0
+  return Math.max(profile.exams.ielts ?? 0, fromToefl, ENGLISH_TO_IELTS[profile.english])
 }
 
 /** Стоимость года: нижняя граница обучения плюс проживание. */
@@ -91,23 +99,41 @@ function thresholdScore(actual: number, required: number, tolerance: number): nu
   return 0.07
 }
 
-function admissionScore(profile: Profile, program: Program): { score: number; gaps: string[] } {
+interface AdmissionResult {
+  score: number
+  gaps: string[]
+  factors: { label: string; verdict: string; tone: ReasonTone }[]
+}
+
+function admissionScore(
+  profile: Profile,
+  program: Program,
+  ach: AchievementSummary,
+): AdmissionResult {
   const parts: number[] = []
   const gaps: string[] = []
+  const factors: { label: string; verdict: string; tone: ReasonTone }[] = []
   const req = program.requirements
+  const add = (label: string, verdict: string, tone: ReasonTone) =>
+    factors.push({ label, verdict, tone })
 
   if (req.ent !== undefined) {
     if (profile.exams.ent !== undefined) {
       parts.push(thresholdScore(profile.exams.ent, req.ent, 10))
       if (profile.exams.ent < req.ent) {
         gaps.push(`ЕНТ: сейчас ${profile.exams.ent}, ориентир ${req.ent} баллов`)
+        add('ЕНТ', `${profile.exams.ent} из ориентира ${req.ent}`, 'watch')
+      } else {
+        add('ЕНТ', `${profile.exams.ent} при ориентире ${req.ent}`, 'good')
       }
     } else if (profile.exams.planned.includes('ent')) {
       parts.push(0.6)
       gaps.push(`ЕНТ ещё не сдан, ориентир ${req.ent} баллов`)
+      add('ЕНТ', `в планах, ориентир ${req.ent}`, 'neutral')
     } else {
       parts.push(0.15)
       gaps.push('ЕНТ не в планах, а без него на грант не подать')
+      add('ЕНТ', 'не в планах', 'watch')
     }
   }
 
@@ -116,6 +142,9 @@ function admissionScore(profile: Profile, program: Program): { score: number; ga
     parts.push(thresholdScore(ielts, req.ielts, 0.5))
     if (ielts < req.ielts) {
       gaps.push(`Английский: ориентир IELTS ${req.ielts}, оценка твоего уровня — ${ielts.toFixed(1)}`)
+      add('Английский', `${ielts.toFixed(1)} из ориентира IELTS ${req.ielts}`, 'watch')
+    } else {
+      add('Английский', `${ielts.toFixed(1)} при ориентире IELTS ${req.ielts}`, 'good')
     }
   }
 
@@ -130,29 +159,100 @@ function admissionScore(profile: Profile, program: Program): { score: number; ga
       parts.push(0.2)
       gaps.push(`Нужен SAT около ${req.sat}, его нет в планах`)
     }
+    add(
+      'SAT',
+      profile.exams.sat !== undefined
+        ? `${profile.exams.sat} при ориентире ${req.sat}`
+        : profile.exams.planned.includes('sat')
+          ? `в планах, ориентир ${req.sat}`
+          : 'не в планах',
+      profile.exams.sat !== undefined && profile.exams.sat >= req.sat ? 'good'
+        : profile.exams.planned.includes('sat') ? 'neutral' : 'watch',
+    )
   }
 
-  if (req.gpa !== undefined) {
-    parts.push(thresholdScore(profile.gpa, req.gpa, 0.3))
-    if (profile.gpa < req.gpa) {
-      gaps.push(`Средний балл: твой ${profile.gpa.toFixed(1)}, ориентир ${req.gpa.toFixed(1)}`)
+  // Диплом IB вузы, которые его принимают, читают напрямую — тогда средний балл
+  // школы уже не нужен, сравнение идёт по баллам диплома.
+  const usesIb = req.ib !== undefined && profile.exams.ib !== undefined
+  if (usesIb) {
+    parts.push(thresholdScore(profile.exams.ib!, req.ib!, 2))
+    if (profile.exams.ib! < req.ib!) {
+      gaps.push(`Диплом IB: сейчас ${profile.exams.ib}, ориентир ${req.ib} баллов`)
+      add('IB', `${profile.exams.ib} из ориентира ${req.ib}`, 'watch')
+    } else {
+      add('IB', `${profile.exams.ib} при ориентире ${req.ib}`, 'good')
+    }
+  } else if (req.gpa !== undefined) {
+    const gpa = effectiveGpa(profile)
+    parts.push(thresholdScore(gpa, req.gpa, 0.3))
+    const note = gpaSourceLabel(profile)
+    const shown = note ? `${gpa.toFixed(1)} по 5-балльной шкале (${note})` : gpa.toFixed(1)
+    if (gpa < req.gpa) {
+      gaps.push(`Средний балл: твой ${gpa.toFixed(1)}, ориентир ${req.gpa.toFixed(1)}`)
+      add('Успеваемость', `${shown} из ориентира ${req.gpa.toFixed(1)}`, 'watch')
+    } else {
+      add('Успеваемость', `${shown} при ориентире ${req.gpa.toFixed(1)}`, 'good')
     }
   }
 
   if (req.portfolio) {
-    const ready = profile.exams.planned.includes('portfolio')
+    // Творческие и проектные достижения — это и есть портфолио.
+    const hasWorks = (ach.byKind.project ?? 0) + (ach.byKind.art ?? 0) + (ach.byKind.hackathon ?? 0) > 0
+    const ready = profile.exams.planned.includes('portfolio') || hasWorks
     parts.push(ready ? 0.9 : 0.4)
     if (!ready) gaps.push('Нужно портфолио работ, его пока нет в планах')
+    add('Портфолио', ready ? 'есть работы или оно в планах' : 'пока нет', ready ? 'good' : 'watch')
   }
 
   if (req.entranceExam) {
     const ready = profile.exams.planned.includes('localExam')
     parts.push(ready ? 0.85 : 0.5)
     if (!ready) gaps.push(`Дополнительное испытание: ${req.entranceExam}`)
+    add('Испытание вуза', ready ? `в планах: ${req.entranceExam}` : req.entranceExam, ready ? 'good' : 'neutral')
   }
 
-  if (parts.length === 0) return { score: 0.6, gaps: ['Требования уточняются на сайте вуза'] }
-  return { score: parts.reduce((a, b) => a + b, 0) / parts.length, gaps }
+  if (parts.length === 0) {
+    return {
+      score: 0.6,
+      gaps: ['Требования уточняются на сайте вуза'],
+      factors: [{ label: 'Требования', verdict: 'не описаны в демо-наборе', tone: 'neutral' }],
+    }
+  }
+
+  const base = parts.reduce((a, b) => a + b, 0) / parts.length
+
+  /**
+   * Достижения не заменяют баллы, но там, где заявку читают целиком, они реально
+   * добавляют шансов. Поэтому надбавка пропорциональна и силе профиля, и тому,
+   * насколько эта программа вообще смотрит на портфолио.
+   */
+  const boost = 0.14 * ach.strength * holisticFactor(program.holistic)
+  if (ach.count > 0 && program.holistic >= 3) {
+    add(
+      'Достижения',
+      ach.strength >= 0.5
+        ? 'сильный профиль, здесь его читают внимательно'
+        : 'есть, но профиль можно усилить',
+      ach.strength >= 0.5 ? 'good' : 'neutral',
+    )
+  } else if (ach.count === 0 && program.holistic >= 4) {
+    add('Достижения', 'здесь смотрят на активности, а в анкете их нет', 'watch')
+    gaps.push('Здесь читают всю заявку: без достижений и активностей шансы ниже')
+  }
+
+  return { score: Math.min(1, base + boost), gaps, factors }
+}
+
+/**
+ * Насколько внеучебный профиль помогает именно этой программе.
+ * Там, где решают только баллы, вклад нейтральный для всех; там, где заявку
+ * рассматривают целиком, разница между пустой и сильной анкетой максимальная.
+ */
+function profileStrengthScore(program: Program, ach: AchievementSummary): number {
+  const factor = holisticFactor(program.holistic)
+  const relevanceBonus = ach.count > 0 ? 0.15 * ach.relevance : 0
+  const value = Math.min(1, ach.strength + relevanceBonus)
+  return factor * value + (1 - factor) * 0.5
 }
 
 function budgetScore(profile: Profile, program: Program): number {
@@ -217,6 +317,7 @@ function buildReasons(
   profile: Profile,
   program: Program,
   b: ScoreBreakdown,
+  ach: AchievementSummary,
 ): { reasons: Reason[]; watchouts: Reason[] } {
   const reasons: Reason[] = []
   const watchouts: Reason[] = []
@@ -336,16 +437,41 @@ function buildReasons(
     })
   }
 
-  return { reasons: reasons.slice(0, 4), watchouts: watchouts.slice(0, 3) }
+  // Достижения
+  if (program.holistic >= 4) {
+    if (ach.strength >= 0.45) {
+      reasons.push({
+        tone: 'good',
+        tag: 'Достижения',
+        text: `Здесь заявку читают целиком, а не только по баллам. Твои достижения — ${ach.highlights[0] ?? 'указанные в анкете'} — работают именно на такой приём.`,
+      })
+    } else if (ach.count === 0) {
+      watchouts.push({
+        tone: 'watch',
+        tag: 'Достижения',
+        text: 'Этот вуз смотрит на олимпиады, проекты и активности, а в анкете их пока нет.',
+      })
+    }
+  } else if (program.holistic <= 2 && ach.strength >= 0.5) {
+    watchouts.push({
+      tone: 'neutral',
+      tag: 'Достижения',
+      text: 'Здесь решают баллы экзаменов: сильное портфолио почти не влияет на приём.',
+    })
+  }
+
+  return { reasons: reasons.slice(0, 5), watchouts: watchouts.slice(0, 3) }
 }
 
-function buildChance(admission: number, gaps: string[], program: Program): Chance {
+function buildChance(adm: AdmissionResult, program: Program): Chance {
+  const { score: admission, gaps, factors } = adm
   const hasData = Object.keys(program.requirements).length > 0
   if (!hasData) {
     return {
       level: 'unknown',
       explanation: 'Требования этой программы не описаны в демо-наборе, оценить шансы нельзя.',
       gaps,
+      factors,
     }
   }
   if (admission >= 0.85) {
@@ -356,6 +482,7 @@ function buildChance(admission: number, gaps: string[], program: Program): Chanc
           ? 'По демо-требованиям ты проходишь по всем указанным критериям. Это ориентир, а не гарантия: конкурс зависит от числа заявок в конкретном году.'
           : 'Ты закрываешь почти все указанные требования. Это ориентир на демо-данных, а не гарантия поступления.',
       gaps,
+      factors,
     }
   }
   if (admission >= 0.55) {
@@ -364,6 +491,7 @@ function buildChance(admission: number, gaps: string[], program: Program): Chanc
       explanation:
         'Часть требований пока не закрыта, но разрыв реально сократить до подачи. Оценка ориентировочная, на демо-данных.',
       gaps,
+      factors,
     }
   }
   return {
@@ -371,11 +499,16 @@ function buildChance(admission: number, gaps: string[], program: Program): Chanc
     explanation:
       'По демо-требованиям разрыв большой. Вариант стоит держать как запасной или заранее закрыть перечисленные пункты.',
     gaps,
+    factors,
   }
 }
 
-export function scoreProgram(profile: Profile, program: Program): Recommendation {
-  const adm = admissionScore(profile, program)
+export function scoreProgram(
+  profile: Profile,
+  program: Program,
+  ach: AchievementSummary = summarizeAchievements(profile),
+): Recommendation {
+  const adm = admissionScore(profile, program, ach)
   const fit = fieldScore(profile, program)
 
   /**
@@ -392,9 +525,10 @@ export function scoreProgram(profile: Profile, program: Program): Recommendation
     geo: geoScore(profile, program) * WEIGHTS.geo * relevance,
     language: languageScore(profile, program) * WEIGHTS.language * relevance,
     priority: priorityScore(profile, program) * WEIGHTS.priority * relevance,
+    profile: profileStrengthScore(program, ach) * WEIGHTS.profile * relevance,
   }
   const score = Math.round(Object.values(breakdown).reduce((a, b) => a + b, 0))
-  const { reasons, watchouts } = buildReasons(profile, program, breakdown)
+  const { reasons, watchouts } = buildReasons(profile, program, breakdown, ach)
   const total = yearlyCost(program)
 
   return {
@@ -403,7 +537,7 @@ export function scoreProgram(profile: Profile, program: Program): Recommendation
     breakdown,
     reasons,
     watchouts,
-    chance: buildChance(adm.score, adm.gaps, program),
+    chance: buildChance(adm, program),
     yearlyCostUsd: total,
     affordable:
       profile.budget === 'grant-only'
@@ -425,7 +559,9 @@ export function recommend(profile: Profile): Recommendation[] {
     ? PROGRAMS
     : PROGRAMS.filter((p) => profile.countries.includes(p.country))
 
-  return reachable.map((p) => scoreProgram(profile, p)).sort((a, b) => b.score - a.score)
+  // Свод по достижениям считается один раз на весь подбор, а не для каждой программы.
+  const ach = summarizeAchievements(profile)
+  return reachable.map((p) => scoreProgram(profile, p, ach)).sort((a, b) => b.score - a.score)
 }
 
 export function scoreLabel(score: number): string {

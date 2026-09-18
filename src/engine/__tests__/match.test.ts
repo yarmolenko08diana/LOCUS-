@@ -9,16 +9,19 @@ const base: Profile = {
   name: 'Тест',
   stage: 'grade11',
   fields: ['it'],
+  schoolSystem: 'kz',
   gpa: 4.6,
   strongSubjects: ['Математика', 'Информатика'],
   languages: ['kk', 'ru', 'en'],
   english: 'b2',
   exams: { ent: 112, planned: ['ent', 'ielts'] },
+  achievements: [],
   countries: ['KZ'],
   relocation: false,
   budget: 'upto6k',
   intakeYear: 2027,
   priorities: ['cost', 'employability'],
+  tone: 'friendly',
 }
 
 const p = (patch: Partial<Profile>): Profile => ({ ...base, ...patch })
@@ -47,7 +50,7 @@ describe('движок подбора', () => {
     // Аграрная программа дешёвая, в нужной стране и с низким порогом ЕНТ,
     // но не совпадает с интересом к IT — она не должна попасть в топ.
     const recs = recommend(base)
-    const agro = recs.findIndex((r) => r.program.id === 'kz-kaznu-agro')
+    const agro = recs.findIndex((r) => r.program.id === 'kz-kaznau-agro')
     expect(agro).toBeGreaterThan(4)
   })
 

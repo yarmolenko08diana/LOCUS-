@@ -1,4 +1,6 @@
-const KEY = 'qadam.state.v1'
+import type { Lang, ThemeMode } from '../types'
+
+const KEY = 'qadam.state.v2'
 
 export interface PersistedShape {
   profile: unknown
@@ -6,6 +8,9 @@ export interface PersistedShape {
   done: string[]
   saved: string[]
   compare: string[]
+  lang?: Lang
+  theme?: ThemeMode
+  reminders?: string[]
 }
 
 export function load<T extends PersistedShape>(): T | null {

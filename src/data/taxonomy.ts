@@ -1,6 +1,6 @@
 import type {
-  BudgetTier, CountryCode, EnglishLevel, ExamId, FieldId,
-  LanguageCode, Priority, Stage,
+  AchievementAward, AchievementKind, AchievementLevel, BudgetTier, CountryCode,
+  EnglishLevel, ExamId, FieldId, LanguageCode, Priority, SchoolSystem, Stage, ToneId,
 } from '../types'
 
 export const FIELDS: { id: FieldId; label: string; hint: string; emoji: string }[] = [
@@ -38,6 +38,10 @@ export const COUNTRIES: { code: CountryCode; label: string; flag: string; note: 
   { code: 'CN', label: 'Китай', flag: '🇨🇳', note: 'CSC-стипендии' },
   { code: 'KR', label: 'Южная Корея', flag: '🇰🇷', note: 'GKS-стипендии' },
   { code: 'MY', label: 'Малайзия', flag: '🇲🇾', note: 'дёшево, английский' },
+  { code: 'JP', label: 'Япония', flag: '🇯🇵', note: 'стипендия MEXT, программы на английском' },
+  { code: 'SG', label: 'Сингапур', flag: '🇸🇬', note: 'MOE Tuition Grant, сильные вузы' },
+  { code: 'HK', label: 'Гонконг (Китай)', flag: '🇭🇰', note: 'английский, стипендии вузов' },
+  { code: 'GE', label: 'Грузия', flag: '🇬🇪', note: 'безвизовый въезд, недорого' },
 ]
 
 export const COUNTRY_LABEL: Record<CountryCode, string> = Object.fromEntries(
@@ -54,6 +58,14 @@ export const LANGUAGES: { code: LanguageCode; label: string }[] = [
   { code: 'en', label: 'Английский' },
   { code: 'tr', label: 'Турецкий' },
   { code: 'de', label: 'Немецкий' },
+  { code: 'cs', label: 'Чешский' },
+  { code: 'pl', label: 'Польский' },
+  { code: 'hu', label: 'Венгерский' },
+  { code: 'it', label: 'Итальянский' },
+  { code: 'zh', label: 'Китайский' },
+  { code: 'ko', label: 'Корейский' },
+  { code: 'ja', label: 'Японский' },
+  { code: 'ka', label: 'Грузинский' },
 ]
 
 export const LANGUAGE_LABEL: Record<LanguageCode, string> = Object.fromEntries(
@@ -128,6 +140,7 @@ export const EXAMS: { id: ExamId; label: string; hint: string }[] = [
   { id: 'toefl', label: 'TOEFL', hint: 'альтернатива IELTS' },
   { id: 'localExam', label: 'Экзамен вуза', hint: 'внутренний экзамен или собеседование' },
   { id: 'portfolio', label: 'Портфолио', hint: 'дизайн, архитектура, медиа' },
+  { id: 'ib', label: 'IB Diploma', hint: 'международный диплом, принимают напрямую' },
 ]
 
 export const EXAM_LABEL: Record<ExamId, string> = Object.fromEntries(
@@ -155,3 +168,97 @@ export const FIELD_SUBJECTS: Record<FieldId, string[]> = {
   education: ['Литература', 'Казахский язык', 'Английский'],
   agro: ['Биология', 'Химия', 'География'],
 }
+
+export const SCHOOL_SYSTEMS: { id: SchoolSystem; label: string; hint: string }[] = [
+  { id: 'kz', label: 'Обычная школа', hint: 'аттестат по 5-балльной шкале' },
+  { id: 'nis', label: 'НИШ', hint: 'итоговый балл по 100-балльной шкале' },
+  { id: 'ib', label: 'IB', hint: 'диплом International Baccalaureate, 24–45' },
+  { id: 'other', label: 'Другая система', hint: 'колледж, зарубежная школа, экстернат' },
+]
+
+export const SCHOOL_SYSTEM_LABEL: Record<SchoolSystem, string> = Object.fromEntries(
+  SCHOOL_SYSTEMS.map((s) => [s.id, s.label]),
+) as Record<SchoolSystem, string>
+
+export const ACHIEVEMENT_KINDS: {
+  id: AchievementKind; label: string; hint: string; emoji: string
+}[] = [
+  { id: 'olympiad', label: 'Олимпиада', emoji: '🥇', hint: 'предметная олимпиада или турнир' },
+  { id: 'research', label: 'Исследование', emoji: '🔬', hint: 'научный проект, статья, конференция' },
+  { id: 'hackathon', label: 'Хакатон', emoji: '💻', hint: 'командная разработка за выходные' },
+  { id: 'contest', label: 'Конкурс или соревнование', emoji: '🏆', hint: 'кейс-чемпионат, дебаты, робототехника' },
+  { id: 'project', label: 'Свой проект', emoji: '🚀', hint: 'приложение, сайт, инициатива' },
+  { id: 'course', label: 'Курс с сертификатом', emoji: '📜', hint: 'онлайн-курс или программа' },
+  { id: 'volunteer', label: 'Волонтёрство', emoji: '🤝', hint: 'помощь фондам и сообществу' },
+  { id: 'leadership', label: 'Лидерство', emoji: '🧭', hint: 'ученический совет, клуб, команда' },
+  { id: 'internship', label: 'Стажировка', emoji: '🏢', hint: 'работа или практика в организации' },
+  { id: 'sport', label: 'Спорт', emoji: '🏅', hint: 'разряд, сборная, соревнования' },
+  { id: 'art', label: 'Творчество', emoji: '🎭', hint: 'музыка, театр, изобразительное искусство' },
+]
+
+export const ACHIEVEMENT_KIND_LABEL: Record<AchievementKind, string> = Object.fromEntries(
+  ACHIEVEMENT_KINDS.map((k) => [k.id, k.label]),
+) as Record<AchievementKind, string>
+
+export const ACHIEVEMENT_KIND_EMOJI: Record<AchievementKind, string> = Object.fromEntries(
+  ACHIEVEMENT_KINDS.map((k) => [k.id, k.emoji]),
+) as Record<AchievementKind, string>
+
+export const ACHIEVEMENT_LEVELS: { id: AchievementLevel; label: string; weight: number }[] = [
+  { id: 'school', label: 'Школьный', weight: 0.2 },
+  { id: 'city', label: 'Городской', weight: 0.4 },
+  { id: 'region', label: 'Областной', weight: 0.6 },
+  { id: 'national', label: 'Республиканский', weight: 0.85 },
+  { id: 'international', label: 'Международный', weight: 1 },
+]
+
+export const ACHIEVEMENT_LEVEL_LABEL: Record<AchievementLevel, string> = Object.fromEntries(
+  ACHIEVEMENT_LEVELS.map((l) => [l.id, l.label]),
+) as Record<AchievementLevel, string>
+
+export const ACHIEVEMENT_LEVEL_WEIGHT: Record<AchievementLevel, number> = Object.fromEntries(
+  ACHIEVEMENT_LEVELS.map((l) => [l.id, l.weight]),
+) as Record<AchievementLevel, number>
+
+export const ACHIEVEMENT_AWARDS: { id: AchievementAward; label: string; weight: number }[] = [
+  { id: 'participant', label: 'Участие', weight: 0.45 },
+  { id: 'finalist', label: 'Финалист', weight: 0.7 },
+  { id: 'bronze', label: '3 место', weight: 0.85 },
+  { id: 'silver', label: '2 место', weight: 0.93 },
+  { id: 'gold', label: '1 место', weight: 1 },
+]
+
+export const ACHIEVEMENT_AWARD_LABEL: Record<AchievementAward, string> = Object.fromEntries(
+  ACHIEVEMENT_AWARDS.map((a) => [a.id, a.label]),
+) as Record<AchievementAward, string>
+
+export const ACHIEVEMENT_AWARD_WEIGHT: Record<AchievementAward, number> = Object.fromEntries(
+  ACHIEVEMENT_AWARDS.map((a) => [a.id, a.weight]),
+) as Record<AchievementAward, number>
+
+/** Какие виды достижений сильнее всего усиливают заявку по направлению. */
+export const FIELD_ACHIEVEMENTS: Record<FieldId, AchievementKind[]> = {
+  it: ['hackathon', 'project', 'olympiad', 'course'],
+  engineering: ['contest', 'project', 'olympiad', 'internship'],
+  medicine: ['volunteer', 'research', 'olympiad', 'internship'],
+  business: ['contest', 'project', 'leadership', 'internship'],
+  economics: ['olympiad', 'research', 'contest', 'course'],
+  design: ['project', 'art', 'contest', 'course'],
+  law: ['contest', 'volunteer', 'leadership', 'research'],
+  social: ['volunteer', 'leadership', 'research', 'contest'],
+  science: ['olympiad', 'research', 'project', 'course'],
+  media: ['project', 'art', 'internship', 'volunteer'],
+  education: ['volunteer', 'leadership', 'course', 'project'],
+  agro: ['research', 'project', 'volunteer', 'course'],
+}
+
+export const TONES: { id: ToneId; label: string; hint: string; emoji: string }[] = [
+  { id: 'friendly', label: 'По-дружески', hint: 'просто и тепло, как со старшим другом', emoji: '🙂' },
+  { id: 'mentor', label: 'Наставник', hint: 'спокойно объясняет, почему именно так', emoji: '🧭' },
+  { id: 'coach', label: 'Коуч', hint: 'коротко и энергично, подталкивает к действию', emoji: '⚡' },
+  { id: 'formal', label: 'Официально', hint: 'сухо и по делу, без лишних слов', emoji: '📋' },
+]
+
+export const TONE_LABEL: Record<ToneId, string> = Object.fromEntries(
+  TONES.map((t) => [t.id, t.label]),
+) as Record<ToneId, string>

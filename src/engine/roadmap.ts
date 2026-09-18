@@ -1,6 +1,14 @@
 import type { Profile, Recommendation, RoadmapPhase, RoadmapTask } from '../types'
-import { COUNTRY_LABEL, ENGLISH_RANK, FIELD_LABEL, FIELD_SUBJECTS, STAGE_YEARS_TO_APPLY } from '../data/taxonomy'
+import {
+  ACHIEVEMENT_KIND_LABEL, COUNTRY_LABEL, ENGLISH_RANK, FIELD_LABEL, FIELD_SUBJECTS,
+  STAGE_YEARS_TO_APPLY,
+} from '../data/taxonomy'
 import { effectiveIelts } from './match'
+import { effectiveGpa } from './academics'
+import { summarizeAchievements } from './achievements'
+import { suggestActivities } from './activities'
+import { matchScholarships } from './scholarships'
+import { softLower } from '../lib/text'
 
 const PHASE_META: Record<RoadmapTask['phase'], { title: string; subtitle: string }> = {
   now: { title: 'Сейчас', subtitle: 'ближайшие 1–2 месяца' },
@@ -26,6 +34,12 @@ export function buildRoadmap(profile: Profile, recs: Recommendation[]): RoadmapP
   const abroad = top.some((r) => r.program.country !== 'KZ')
   const grantTargets = top.filter((r) => r.program.grant.available)
   const ielts = effectiveIelts(profile)
+  const gpa = effectiveGpa(profile)
+  const ach = summarizeAchievements(profile)
+  // Насколько программы в топе вообще смотрят на портфолио и активности.
+  const holisticTop = top.length > 0
+    ? Math.max(...top.map((r) => r.program.holistic))
+    : 1
   const add = (t: RoadmapTask) => tasks.push(t)
 
   // — Сейчас —
@@ -153,10 +167,10 @@ export function buildRoadmap(profile: Profile, recs: Recommendation[]): RoadmapP
     })
   }
 
-  if (profile.gpa < 4.5 && years >= 1) {
+  if (gpa < 4.5 && years >= 1) {
     add({
       id: 'gpa-up',
-      title: `Поднять средний балл с ${profile.gpa.toFixed(1)} хотя бы до 4.5`,
+      title: `Поднять средний балл с ${gpa.toFixed(1)} хотя бы до 4.5`,
       why: 'Конкурсные программы и гранты смотрят на аттестат. У тебя ещё есть учебный год, чтобы это изменить.',
       category: 'academic',
       phase: 'soon',
@@ -165,17 +179,80 @@ export function buildRoadmap(profile: Profile, recs: Recommendation[]): RoadmapP
     })
   }
 
-  add({
-    id: 'activity',
-    title:
-      profile.fields.length > 0
-        ? `Сделать один проект или волонтёрство по теме «${FIELD_LABEL[profile.fields[0]]}»`
-        : 'Добавить одну внеучебную активность в профиль',
-    why: 'Зарубежные программы и стипендии оценивают не только баллы. Один доведённый до конца проект в мотивационном письме весит больше, чем список кружков.',
-    category: 'activity',
-    phase: 'soon',
-    window: years >= 1 ? 'в течение года' : 'ближайшие 2 месяца',
-    effort: '2 часа в неделю',
+  /**
+   * Активности берутся из пробелов в достижениях, а не из общего списка.
+   * Поэтому добавление достижения в анкету убирает соответствующий шаг из
+   * маршрута и подставляет следующий по важности — план заметно меняется.
+   */
+  const ideas = suggestActivities(profile, holisticTop >= 4 ? 3 : 2)
+  ideas.forEach((s, i) => {
+    add({
+      id: `activity-${s.idea.id}`,
+      title: s.idea.title,
+      why: `${s.hint}. ${s.idea.why}`,
+      category: s.idea.kind === 'hackathon' || s.idea.kind === 'contest' || s.idea.kind === 'olympiad'
+        ? 'contest'
+        : s.idea.kind === 'research'
+          ? 'research'
+          : 'activity',
+      phase: i === 0 ? 'now' : 'soon',
+      window: years >= 1 ? 'в течение года' : 'ближайшие 2 месяца',
+      effort: s.idea.effort,
+      source: s.idea.source,
+    })
+  })
+
+  if (ach.count === 0 && holisticTop >= 4) {
+    add({
+      id: 'achievements-empty',
+      title: 'Внести в анкету всё, что уже есть: олимпиады, проекты, волонтёрство',
+      why: 'Программы в твоём топе читают заявку целиком. Даже школьная грамота или кружок меняют и оценку шансов, и маршрут — сейчас в профиле пусто.',
+      category: 'activity',
+      phase: 'now',
+      window: 'сегодня',
+      effort: '10 минут',
+    })
+  } else if (ach.count > 0 && ach.strength >= 0.45) {
+    add({
+      id: 'achievements-leverage',
+      title: 'Построить мотивационное письмо вокруг сильного достижения',
+      why: `Самое весомое в твоей анкете — ${softLower(ach.highlights[0] ?? 'указанное достижение')}. В заявке это работает только тогда, когда объяснено, чему оно тебя научило.`,
+      category: 'essay',
+      phase: 'soon',
+      window: 'за 3 месяца до подачи',
+      effort: '3 часа',
+    })
+  }
+
+  if (ach.count > 0 && ach.relevance < 0.5 && profile.fields.length > 0) {
+    add({
+      id: 'achievements-align',
+      title: `Добавить достижение по направлению «${FIELD_LABEL[profile.fields[0]]}»`,
+      why: `Достижения в анкете есть, но по выбранному направлению их почти нет. Приёмная комиссия ищет связь между активностями и тем, куда ты подаёшь${
+        ach.missing.length > 0 ? `: не хватает такого, как ${softLower(ACHIEVEMENT_KIND_LABEL[ach.missing[0]])}` : ''
+      }.`,
+      category: 'activity',
+      phase: 'soon',
+      window: 'ближайшие 3 месяца',
+      effort: '2 часа в неделю',
+    })
+  }
+
+  // Стипендии со своими дедлайнами — отдельные шаги, а не сноска в тексте.
+  const schol = matchScholarships(profile).filter((m) => m.score >= 55).slice(0, 2)
+  schol.forEach((m) => {
+    add({
+      id: `scholarship-${m.scholarship.id}`,
+      title: `Подготовить заявку: ${m.scholarship.name}`,
+      why: m.eligible
+        ? `${m.scholarship.coverage}. Подача — ${m.scholarship.window}, это ориентировочный период по демо-данным.`
+        : `${m.scholarship.coverage}. Сейчас не закрыто: ${softLower(m.gaps[0] ?? 'часть требований')}.`,
+      category: 'scholarship',
+      phase: 'soon',
+      window: m.scholarship.window,
+      effort: '4–6 часов',
+      source: m.scholarship.source,
+    })
   })
 
   if (grantTargets.length > 0) {
@@ -205,10 +282,21 @@ export function buildRoadmap(profile: Profile, recs: Recommendation[]): RoadmapP
   })
 
   add({
+    id: 'cv',
+    title: 'Собрать одностраничное CV',
+    why: 'Резюме просят и вузы, и стипендии. На одной странице: учёба, достижения, проекты, волонтёрство и языки.',
+    category: 'document',
+    phase: 'apply',
+    window: 'за 2 месяца до дедлайна',
+    effort: '2 часа',
+    source: { label: 'Шаблон Europass', url: 'https://europa.eu/europass/en/create-europass-cv' },
+  })
+
+  add({
     id: 'motivation',
     title: 'Написать мотивационное письмо и дать его проверить',
     why: 'Одно письмо пишется под все программы, а потом адаптируется под каждую. Черновик всегда слабее третьей версии.',
-    category: 'document',
+    category: 'essay',
     phase: 'apply',
     window: 'за 6 недель до дедлайна',
     effort: '5–8 часов',
