@@ -251,6 +251,22 @@ export function ProgramDetail() {
                 </li>
               ))}
           </ul>
+          {p.requirements.csca !== undefined && (
+            <div className="mt-4 rounded-xl border border-line bg-paper px-3.5 py-3">
+              <p className="text-[14px] font-bold">
+                {L('Нужно сдать CSCA', 'CSCA тапсыру керек')}
+                <span className="ml-2 rounded-full bg-brand-50 px-2 py-0.5 text-[13px] font-bold tabular-nums text-brand-700">
+                  ≈ {p.requirements.csca}
+                </span>
+              </p>
+              <p className="mt-1 text-[13px] leading-relaxed text-ink-muted">
+                {L(
+                  `Вступительный экзамен вузов Китая для иностранцев. ${p.requirements.csca} — ориентировочный средний балл из 100 по предметам набора; демонстрационная оценка, единой таблицы порогов вузы не публикуют.`,
+                  `Қытай ЖОО-ларының шетелдіктерге арналған кіру емтиханы. ${p.requirements.csca} — жинақ пәндері бойынша 100-ден болжамды орташа балл; демонстрациялық баға, ЖОО-лар бірыңғай шектер кестесін жарияламайды.`,
+                )}
+              </p>
+            </div>
+          )}
           <h3 className="mt-5 text-[15px] font-bold">{L('Периоды подачи', 'Өтінім беру кезеңдері')}</h3>
           <ul className="mt-2.5 space-y-2">
             {p.deadlines.map((d) => (

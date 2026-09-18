@@ -5,6 +5,7 @@ import { useL } from '../i18n/LangContext'
 import { EXTRAS, STEPS, stepIndexForPath } from './Journey'
 import { ChangeToast } from './ChangeToast'
 import { AppSoonBadge, LangToggle, ThemeToggle } from './Controls'
+import { DeadlineBell } from './DeadlineBell'
 import { initials } from '../store/account'
 
 function Logo() {
@@ -200,6 +201,7 @@ export function Shell({ children }: { children: ReactNode }) {
                 <p className="text-sm font-bold tabular-nums text-ink">{progress}%</p>
               </div>
             )}
+            <DeadlineBell />
             <LangToggle />
             <ThemeToggle />
             <AccountButton />

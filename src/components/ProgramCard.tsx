@@ -86,6 +86,9 @@ export function ProgramCard({
           <Badge tone="brand">{scoreLabel(rec.score)}</Badge>
           <Badge tone={chance.tone}>{Lc(chance.label, chance.labelKk)}</Badge>
           {p.grant.available && <Badge tone="mint">{Lc('Есть грант', 'Грант бар')}</Badge>}
+          {p.requirements.csca !== undefined && (
+            <Badge tone="sun">{Lc('CSCA', 'CSCA')} ≈ {p.requirements.csca}</Badge>
+          )}
           {!rec.affordable && !p.grant.available && (
             <Badge tone="coral">{Lc('Выше бюджета', 'Бюджеттен жоғары')}</Badge>
           )}

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Badge, Button, Card, Chip, DemoNote, Meter } from '../components/ui'
-import { useApp } from '../store/app'
+import { EMPTY_PROFILE, useApp } from '../store/app'
 import { useL } from '../i18n/LangContext'
 import {
   ACHIEVEMENT_KIND_EMOJI, achievementAwards, achievementExample, achievementForms,
@@ -10,7 +10,7 @@ import {
   schoolSystems, stages, subjects,
 } from '../data/taxonomy'
 import { achievementLabel, summarizeAchievements } from '../engine/achievements'
-import { cscaPlan, cscaTargets } from '../engine/csca'
+import { cscaPlan } from '../engine/csca'
 import type {
   Achievement, AchievementAward, AchievementForm, AchievementKind, AchievementLevel, ExamId, Profile,
 } from '../types'
@@ -292,21 +292,23 @@ export function Survey() {
   const L = useL()
   const navigate = useNavigate()
   /*
-   * У вошедшего человека имя уже есть, и переспрашивать его — значит рисковать
-   * тем, что в анкете останется имя из демо-кейса, а в шапке будет своё.
-   * Поэтому поле сразу заполнено именем аккаунта и правится в профиле.
+   * Повторное заполнение начинается с чистого листа, а не с прошлых ответов:
+   * человек возвращается в анкету, когда что-то изменилось, и старые галочки
+   * он скорее пролистает, чем перечитает. Прошлый разбор при этом остаётся —
+   * профиль перезаписывается только в конце, на «Готово».
+   *
+   * Имя — исключение: у вошедшего оно уже есть, и переспрашивать его незачем.
    */
-  const [draft, setDraft] = useState<Profile>(() =>
-    account ? { ...profile, name: account.firstName } : profile,
-  )
+  const [draft, setDraft] = useState<Profile>(() => {
+    const base = completed ? EMPTY_PROFILE : profile
+    return account ? { ...base, name: account.firstName } : base
+  })
   const [index, setIndex] = useState(0)
   const [touched, setTouched] = useState(false)
 
   // Набор предметов CSCA пересобирается на лету: он зависит от направления
   // и от языков в анкете, а их правят на соседних шагах.
   const csca = useMemo(() => cscaPlan(draft), [draft])
-  // База китайских программ не зависит от анкеты, поэтому считается один раз.
-  const cscaScores = useMemo(() => cscaTargets(), [])
 
   const step = STEP_DEFS[index]
   const isLast = index === STEP_DEFS.length - 1
@@ -604,7 +606,7 @@ export function Survey() {
                 onChange={(v) => patch({ exams: { ...draft.exams, sat: v } })}
               />
             </div>
-            {csca.subjects.length > 0 && (draft.exams.planned.includes('csca') || csca.relevant) && (
+            {csca.subjects.length > 0 && draft.exams.planned.includes('csca') && (
               <Card className="p-4">
                 <p className="label mb-1">{L('Что сдавать на CSCA', 'CSCA-да не тапсырасың')}</p>
                 <p className="text-[13.5px] leading-relaxed text-ink-soft">{csca.trackNote}</p>
@@ -618,22 +620,10 @@ export function Survey() {
                     </li>
                   ))}
                 </ul>
-                <p className="label mb-2 mt-5">{L('Ориентиры по вузам', 'ЖОО бойынша бағдарлар')}</p>
-                <ul className="space-y-1.5">
-                  {cscaScores.map((t) => (
-                    <li key={t.id} className="flex items-baseline justify-between gap-3 border-t border-line pt-1.5 first:border-t-0 first:pt-0">
-                      <span className="text-[13.5px] leading-snug">
-                        <span className="font-bold">{t.university}</span>
-                        <span className="text-ink-muted"> · {t.program}</span>
-                      </span>
-                      <span className="shrink-0 text-[13.5px] font-bold tabular-nums">{t.score}</span>
-                    </li>
-                  ))}
-                </ul>
                 <DemoNote className="mt-3">
                   {L(
-                    'Баллы — средние по предметам набора из 100 и приведены как ориентир: вузы Китая не публикуют единой таблицы порогов, планка меняется каждый год. Состав предметов зависит от вуза и программы. Сверяйте на ',
-                    'Балдар — жинақ пәндері бойынша 100-ден орташа мән, бағдар ретінде берілген: Қытай ЖОО-лары бірыңғай шектер кестесін жарияламайды, деңгей жыл сайын өзгереді. Пәндер құрамы ЖОО мен бағдарламаға байланысты. Тексеріңіз: ',
+                    'Состав предметов зависит от вуза и программы, а ориентир по баллу стоит у каждой китайской программы в подборе. Сверяйте на ',
+                    'Пәндер құрамы ЖОО мен бағдарламаға байланысты, ал балл бойынша бағдар таңдаудағы әр қытай бағдарламасында тұр. Тексеріңіз: ',
                   )}
                   <a href={csca.source.url} target="_blank" rel="noreferrer noopener" className="font-semibold underline underline-offset-2">
                     {csca.source.label} ↗

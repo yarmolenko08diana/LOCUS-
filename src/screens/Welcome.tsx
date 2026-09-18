@@ -64,10 +64,16 @@ export function Welcome() {
         </p>
 
         <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-          <Button size="lg" onClick={() => navigate('/survey')} className="sm:w-auto">
+          <Button size="lg" onClick={() => navigate(completed ? '/diagnosis' : '/survey')} className="sm:w-auto">
             {completed ? L('Продолжить маршрут', 'Маршрутты жалғастыру') : L('Начать анкету', 'Сауалнаманы бастау')}
             <span aria-hidden>→</span>
           </Button>
+          {/* Анкета заново — отдельной кнопкой: основной путь ведёт к готовому разбору. */}
+          {completed && (
+            <Button variant="secondary" size="lg" onClick={() => navigate('/survey')} className="sm:w-auto">
+              {L('Заполнить анкету заново', 'Сауалнаманы қайта толтыру')}
+            </Button>
+          )}
         </div>
       </section>
 

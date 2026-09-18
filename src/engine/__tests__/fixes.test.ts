@@ -1,12 +1,14 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import type { Profile } from '../../types'
+import type { CalendarEntry, Profile } from '../../types'
 import { SCHOLARSHIPS } from '../../data/scholarships'
 import { ACHIEVEMENT_FORMS_RAW, ACHIEVEMENT_KINDS_RAW, achievementForms, achievementLevels } from '../../data/taxonomy'
 import { matchScholarships } from '../scholarships'
-import { cscaPlan, cscaTargets } from '../csca'
+import { cscaPlan } from '../csca'
 import { PROGRAMS } from '../../data/programs'
 import { greet, nudge } from '../tone'
 import { displayName } from '../../store/account'
+import { deadlineAlerts, urgentCount } from '../alerts'
+import { EMPTY_PROFILE } from '../../store/app'
 import { buildRoadmap, allTasks } from '../roadmap'
 import { recommend } from '../match'
 import { demoCase } from '../../data/demoCases'
@@ -137,13 +139,6 @@ describe('проходные баллы CSCA', () => {
     }
   })
 
-  it('выстраивает ориентиры по убыванию и отдаёт их только для Китая', () => {
-    const targets = cscaTargets()
-    expect(targets.length).toBe(PROGRAMS.filter((x) => x.country === 'CN').length)
-    const scores = targets.map((t) => t.score)
-    expect([...scores].sort((a, b) => b - a)).toEqual(scores)
-  })
-
   it('называет балл вуза в шаге плана, когда Китай выбран', () => {
     const profile = p({ countries: ['CN'], fields: ['it'], relocation: true })
     const tasks = allTasks(buildRoadmap(profile, recommend(profile)))
@@ -165,5 +160,49 @@ describe('единый голос и имя', () => {
     const account = { email: 'a@b.kz', firstName: 'Жасмина', lastName: 'Молдагали', createdAt: '2026-09-18T00:00:00.000Z' }
     expect(displayName(account, 'Әсем')).toBe('Жасмина')
     expect(displayName(null, 'Әсем')).toBe('Әсем')
+  })
+})
+
+describe('напоминания о дедлайнах', () => {
+  const entry = (id: string, month: number, year: number, endMonth?: number): CalendarEntry => ({
+    id, title: id, subtitle: '', kind: 'program', window: 'демо', month, year, endMonth,
+  })
+  // Середина марта 2026: месяц 3.
+  const now = new Date('2026-03-15T00:00:00Z')
+
+  it('считает идущий период срочным, а дальний — нет', () => {
+    const alerts = deadlineAlerts([entry('идёт', 2, 2026, 5), entry('осенью', 10, 2026)], [], now)
+    const byId = Object.fromEntries(alerts.map((a) => [a.entry.id, a]))
+    expect(byId['идёт'].level).toBe('now')
+    expect(byId['осенью']).toBeUndefined()
+  })
+
+  it('красным горят только период сейчас и ближайший месяц', () => {
+    const alerts = deadlineAlerts(
+      [entry('сейчас', 3, 2026), entry('через месяц', 4, 2026), entry('через три', 6, 2026)],
+      [], now,
+    )
+    expect(urgentCount(alerts)).toBe(2)
+  })
+
+  it('поднимает отмеченные звёздочкой выше прочих на том же уровне', () => {
+    const alerts = deadlineAlerts([entry('обычный', 6, 2026), entry('важный', 7, 2026)], ['важный'], now)
+    expect(alerts[0].entry.id).toBe('важный')
+    expect(alerts[0].starred).toBe(true)
+  })
+
+  it('сортирует от срочного к дальнему', () => {
+    const alerts = deadlineAlerts([entry('через два', 5, 2026), entry('сейчас', 3, 2026)], [], now)
+    expect(alerts.map((a) => a.entry.id)).toEqual(['сейчас', 'через два'])
+  })
+})
+
+describe('повторное заполнение анкеты', () => {
+  it('не оставляет прошлые ответы в пустом профиле', () => {
+    expect(EMPTY_PROFILE.fields).toEqual([])
+    expect(EMPTY_PROFILE.countries).toEqual([])
+    expect(EMPTY_PROFILE.achievements).toEqual([])
+    expect(EMPTY_PROFILE.exams.planned).toEqual([])
+    expect(EMPTY_PROFILE.name).toBe('')
   })
 })
