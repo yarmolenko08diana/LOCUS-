@@ -412,9 +412,20 @@ export function scoreProgram(profile: Profile, program: Program): Recommendation
   }
 }
 
-/** Полный отсортированный подбор по всем программам демо-набора. */
+/**
+ * Полный отсортированный подбор.
+ *
+ * Готовность к переезду — не предпочтение, а жёсткое ограничение: если человек
+ * не может уехать, программа в другой стране для него не существует, каким бы
+ * высоким ни было совпадение по остальным критериям. Поэтому здесь фильтр,
+ * а не понижающий коэффициент.
+ */
 export function recommend(profile: Profile): Recommendation[] {
-  return PROGRAMS.map((p) => scoreProgram(profile, p)).sort((a, b) => b.score - a.score)
+  const reachable = profile.relocation
+    ? PROGRAMS
+    : PROGRAMS.filter((p) => profile.countries.includes(p.country))
+
+  return reachable.map((p) => scoreProgram(profile, p)).sort((a, b) => b.score - a.score)
 }
 
 export function scoreLabel(score: number): string {
