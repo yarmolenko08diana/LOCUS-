@@ -5,6 +5,7 @@ import { ProgramCard } from '../components/ProgramCard'
 import { useApp } from '../store/app'
 import { BUDGETS, COUNTRIES, FIELDS } from '../data/taxonomy'
 import { countOf } from '../lib/text'
+import { explainEmpty } from '../engine/diagnoseEmpty'
 import type { BudgetTier, CountryCode, FieldId } from '../types'
 
 type Sort = 'match' | 'cost' | 'chance'
@@ -122,6 +123,57 @@ function QuickTune() {
   )
 }
 
+/**
+ * Пустая выдача — это тоже ответ. Показываем, какой ответ анкеты отсекает
+ * все варианты и сколько появится, если его ослабить, вместо общего
+ * «ничего не найдено».
+ */
+function EmptyResult({ onResetFilter }: { onResetFilter?: () => void }) {
+  const { profile, setProfile } = useApp()
+  const { cause, relaxations } = useMemo(() => explainEmpty(profile), [profile])
+
+  return (
+    <Card className="p-6">
+      <div aria-hidden className="mb-4 grid h-11 w-11 place-items-center rounded-2xl bg-sun-50 text-xl">🧭</div>
+      <h2 className="text-[20px] font-extrabold leading-snug">Под эти условия ничего не нашлось</h2>
+      <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{cause}</p>
+
+      {onResetFilter && (
+        <p className="mt-3 text-[14px] text-ink-soft">
+          Сейчас включён фильтр «только в бюджет» —{' '}
+          <button type="button" onClick={onResetFilter} className="font-bold text-brand-600 underline underline-offset-2">
+            снять его
+          </button>
+          .
+        </p>
+      )}
+
+      {relaxations.length > 0 && (
+        <ul className="mt-5 space-y-2.5">
+          {relaxations.map((r) => (
+            <li key={r.label}>
+              <button
+                type="button"
+                onClick={() => setProfile(r.patch)}
+                className="flex w-full items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40"
+              >
+                <span className="text-[15px] font-bold">{r.label}</span>
+                <span className="shrink-0 text-[13px] font-bold tabular-nums text-mint-600">
+                  +{countOf(r.gain, 'вариант', 'варианта', 'вариантов')}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <Button variant="secondary" className="mt-5" onClick={() => (window.location.hash = '#/survey')}>
+        Вернуться в анкету
+      </Button>
+    </Card>
+  )
+}
+
 export function Matches() {
   const {
     recommendations, completed, compare, toggleCompare, saved, toggleSaved, profile,
@@ -203,11 +255,7 @@ export function Matches() {
       </div>
 
       {list.length === 0 ? (
-        <Empty
-          title="Под эти условия ничего не нашлось"
-          description="Слишком узкие фильтры. Попробуй убрать ограничение по бюджету или добавить страну в анкете."
-          action={<Button variant="secondary" onClick={() => setOnlyAffordable(false)}>Сбросить фильтр</Button>}
-        />
+        <EmptyResult onResetFilter={onlyAffordable ? () => setOnlyAffordable(false) : undefined} />
       ) : (
         <>
           {list.length < 3 && (
@@ -239,23 +287,25 @@ export function Matches() {
         </>
       )}
 
-      <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="label mb-1.5">Что дальше</p>
-          <p className="text-[17px] font-bold leading-snug">
-            {compare.length >= 2
-              ? 'Сравни отмеченные варианты по важным для тебя параметрам'
-              : 'Отметь два варианта кнопкой «Сравнить»'}
-          </p>
-          <p className="mt-1 text-[14px] text-ink-soft">
-            Дальше соберём план подготовки под твой список.
-          </p>
-        </div>
-        <div className="flex shrink-0 gap-2">
-          <Button variant="secondary" size="lg" onClick={() => navigate('/compare')}>Сравнение</Button>
-          <Button size="lg" onClick={() => navigate('/roadmap')}>План <span aria-hidden>→</span></Button>
-        </div>
-      </Card>
+      {list.length > 0 && (
+        <Card className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="label mb-1.5">Что дальше</p>
+            <p className="text-[17px] font-bold leading-snug">
+              {compare.length >= 2
+                ? 'Сравни отмеченные варианты по важным для тебя параметрам'
+                : 'Отметь два варианта кнопкой «Сравнить»'}
+            </p>
+            <p className="mt-1 text-[14px] text-ink-soft">
+              Дальше соберём план подготовки под твой список.
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Button variant="secondary" size="lg" onClick={() => navigate('/compare')}>Сравнение</Button>
+            <Button size="lg" onClick={() => navigate('/roadmap')}>План <span aria-hidden>→</span></Button>
+          </div>
+        </Card>
+      )}
 
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone="neutral">
