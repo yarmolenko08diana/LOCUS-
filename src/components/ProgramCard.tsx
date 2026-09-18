@@ -50,9 +50,11 @@ export function ProgramCard({
                 {COUNTRY_FLAG[p.country]} {COUNTRY_LABEL[p.country]}, {p.city}
               </span>
             </div>
-            <h3 className="mt-2 text-[19px] font-extrabold leading-snug tracking-[-0.01em]">
-              <Link to={`/program/${p.id}`} className="hover:text-brand-700">{p.program}</Link>
-            </h3>
+            <h2 className="mt-2 text-[19px] font-extrabold leading-snug tracking-[-0.01em]">
+              <Link to={`/program/${p.id}`} className="-my-1 inline-block py-1 hover:text-brand-700">
+                {p.program}
+              </Link>
+            </h2>
             <p className="mt-0.5 text-[14px] font-semibold text-ink-soft">{p.university}</p>
           </div>
 

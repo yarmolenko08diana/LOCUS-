@@ -126,7 +126,10 @@ export function Diagnosis() {
           eyebrow="Данные, на которых построен подбор"
           title="Твой профиль"
           action={
-            <Link to="/survey" className="text-[13px] font-bold text-brand-600 underline underline-offset-2">
+            <Link
+              to="/survey"
+              className="-m-2 inline-block p-2 text-[13px] font-bold text-brand-600 underline underline-offset-2"
+            >
               Изменить
             </Link>
           }

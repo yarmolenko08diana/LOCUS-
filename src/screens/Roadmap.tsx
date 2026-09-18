@@ -31,7 +31,7 @@ function TaskRow({
         role="checkbox"
         aria-checked={done}
         aria-label={done ? `Снять отметку: ${task.title}` : `Отметить выполненным: ${task.title}`}
-        className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 transition-all active:scale-90 ${
+        className={`-m-2 mt-[-6px] box-content grid h-6 w-6 shrink-0 place-items-center rounded-full border-2 bg-clip-padding p-2 transition-all active:scale-90 ${
           done ? 'border-mint-500 bg-mint-500 text-white' : 'border-line bg-surface text-transparent hover:border-brand-400'
         }`}
       >
@@ -52,7 +52,7 @@ function TaskRow({
           type="button"
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
-          className="mt-1 text-[13px] font-semibold text-brand-600 hover:underline"
+          className="-mx-1 mt-0.5 min-h-[32px] px-1 py-1.5 text-[13px] font-semibold text-brand-600 hover:underline"
         >
           {open ? 'Скрыть' : 'Зачем это'}
         </button>
@@ -247,7 +247,7 @@ export function Roadmap() {
                     href={d.url}
                     target="_blank"
                     rel="noreferrer noopener"
-                    className="text-[12px] font-semibold text-ink-muted underline underline-offset-2"
+                    className="-mx-1 inline-block px-1 py-2 text-[12px] font-semibold text-ink-muted underline underline-offset-2"
                   >
                     сверить ↗
                   </a>

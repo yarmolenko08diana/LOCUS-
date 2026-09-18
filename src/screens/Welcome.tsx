@@ -121,7 +121,10 @@ export function Welcome() {
           демонстрационные, у каждой карточки есть ссылка на официальный сайт вуза.
         </DemoNote>
         <p className="mt-3 text-[13px] text-ink-muted">
-          <Link to="/survey" className="font-semibold text-brand-600 underline underline-offset-2">
+          <Link
+            to="/survey"
+            className="-m-2 inline-block p-2 font-semibold text-brand-600 underline underline-offset-2"
+          >
             Начать анкету
           </Link>
         </p>
